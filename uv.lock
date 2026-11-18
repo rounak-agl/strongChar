@@ -1480,11 +1480,15 @@ name = "strongchar-verifier"
 version = "0.1.0"
 source = { editable = "apps/verifier" }
 dependencies = [
+    { name = "strongchar-compete" },
     { name = "strongchar-runtime" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "strongchar-runtime", editable = "packages/runtime" }]
+requires-dist = [
+    { name = "strongchar-compete", editable = "packages/compete" },
+    { name = "strongchar-runtime", editable = "packages/runtime" },
+]
 
 [[package]]
 name = "strongchar-workloads"

@@ -10,48 +10,23 @@ import argparse
 import time
 
 from eth_utils import keccak
-from qorsdk import msg
 from strongchar_core import encodings as enc
 from strongchar_core.blob import from_blob
 from strongchar_datasets import presets
 from strongchar_datasets.canonical import from_csv, split, standardise
 from strongchar_datasets.shards import cut
 from strongchar_qore import keystore, seal
-from strongchar_qore.erc20 import convert_coin_msg
 from strongchar_qore.market import Contracts, WindowManager
 from strongchar_qore.seal import Kind, make_card
 from strongchar_runtime import chainview as cv
 from strongchar_runtime.client import Coordinator
+from strongchar_runtime.funding import ensure_fusd
 from strongchar_runtime.recipients import recipient
 from strongchar_runtime.spec import make_spec
 from strongchar_runtime.work import global_aad, kem_keys
 
 NODES = ["node-1", "node-2", "node-3", "node-4"]
 STAKE = 100 * 10**6
-POOL_FUSD_QOR = 2
-
-
-def ensure_fusd(c: Contracts, owner, need: int) -> None:
-    """Swap QOR -> fUSD in the native AMM if needed, then convert the bank coin into the ERC-20 the contract pulls."""
-    denom = f"erc20:{c.dep.fusd}"
-    have = c.fusd.functions.balanceOf(owner.evm).call() + c.chain.balances(owner.cosmos).get(denom, 0)
-    if have < need:
-        _swap(c, owner, need, have)
-    bank = c.chain.balances(owner.cosmos).get(denom, 0)
-    if bank:
-        r = c.chain.submit(owner, [convert_coin_msg(denom=denom, amount=bank, receiver_evm=owner.evm, sender_qor=owner.cosmos)])
-        print(f"converted {bank / 1e6} fUSD from bank coin to ERC-20: {r.txhash}")
-
-
-def _swap(c: Contracts, owner, need: int, have: int) -> None:
-    pool = [p for p in c.chain.get("/qorechain/amm/v1/pools")["pools"] if p["id"] == str(POOL_FUSD_QOR)][0]
-    ra, rb = int(pool["reserve_a"]), int(pool["reserve_b"])  # a = fUSD, b = uqor
-    want = (need - have) * 12 // 10
-    amount_in = rb * want // (ra - want) * 10_000 // 9_960 + 1
-    m = msg.amm.swap_exact_in(sender=owner.cosmos, pool_id=POOL_FUSD_QOR, token_in={"denom": "uqor", "amount": str(amount_in)},
-                              denom_out=f"erc20:{c.dep.fusd}", min_out=str(need - have))
-    r = c.chain.submit(owner, [m])
-    print(f"swapped {amount_in / 1e6:.3f} QOR -> fUSD in native pool {POOL_FUSD_QOR}: {r.txhash}")
 
 
 def main() -> None:
