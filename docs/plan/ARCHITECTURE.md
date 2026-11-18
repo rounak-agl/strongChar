@@ -15,7 +15,7 @@ Status: v2 after the red-team review, 18 Nov 2026. Items marked **[verify]** dep
                          └───────────────▲──────────────────────────────────────────▲──────────────────────────┘
                                          │ qorsdk + qoresign (Python)               │ web3.py / viem (inside a window)
    ┌─────────────────────────────────────┴──────────────┐   ┌───────────────────────┴────────────────────────────┐
-   │ Edge VM (public, t4g.small)                        │   │ Worker VM (private, t4g.medium, no inbound ports)  │
+   │ Edge VM (public, t4g.small)                        │   │ Worker VMs (private, 2 × t4g.small, no inbound)    │
    │  Caddy (TLS)  →  coordinator (FastAPI + SQLite)    │◄──┤  verifier-a, verifier-b                            │
    │  ciphertext blob store, scheduler, indexer, API    │   │  node-1..3 (honest), node-4 (cheat)                │
    │  holds NO decryption key; only its own tx key      │   │  sandbox runner (gVisor) for competition scripts   │
@@ -79,7 +79,7 @@ Gitignored: `.env*`, `.private/`, `research_notes/`, `reports/`, `CLAUDE.local.m
 | Web | Next.js 16, React 19, TanStack Query, Tailwind 4, viem | |
 | QoreChain (web) | `@qorechain/sdk`, `@qorechain/react`, `@qorechain/evm`, `@qorechain/qorex-rainbowkit`, `@qorechain/qorex-wallet-mock` (tests), `@qorechain/qoreseal`, `@qorechain/qoresign` | Client-side seal and open, SIWQ, windows; kit credit in package.json |
 | Sandbox | Docker with gVisor (`runsc`), pinned `python:3.12-slim` digest + locked numpy, pandas, scikit-learn | Deterministic CPU runs for untrusted scripts with a kernel boundary |
-| Hosting | Vercel (web). AWS ap-southeast-2: edge VM `t4g.small` (2 GB) and worker VM `t4g.medium` (4 GB), both arm64, Ubuntu LTS | Splits ciphertext-only edge from key-holding workers. About $54 of the $100 credits to 16 Dec |
+| Hosting | Vercel (web). AWS ap-southeast-2: three `t4g.small` (2 GB + 2 GB swap), arm64, Ubuntu 24.04: edge, verifiers, nodes | Splits the ciphertext-only edge from key-holding workers, and verifiers from nodes. The Free plan only allows free-tier types. About $59 of the $100 credits to 16 Dec |
 
 ## 4. Identities and keys
 
@@ -251,9 +251,11 @@ Metrics: accuracy, macro-F1, RMSE, ROC-AUC, all in `strongchar_compete.metrics`,
 ## 10. Deployment
 
 - **Edge VM** (`t4g.small`, arm64, Elastic IP): `docker compose -f docker/compose.edge.yml up -d` runs the coordinator and Caddy. Security group opens 80 and 443 only. API hostname `<elastic-ip-with-dashes>.sslip.io`, so Caddy gets a Let's Encrypt certificate without a bought domain.
-- **Worker VM** (`t4g.medium`, arm64): `docker compose -f docker/compose.worker.yml up -d` runs verifier-a, verifier-b, node-1..4 and the sandbox runner with gVisor. Security group has no inbound rules; it talks to the edge over HTTPS and to the chain RPC.
+- **Verifiers VM** (`t4g.small`, arm64): `docker compose -f docker/compose.verifiers.yml up -d` runs verifier-a, verifier-b and the sandbox runner with gVisor (runsc installed by `ops/bootstrap.sh`).
+- **Nodes VM** (`t4g.small`, arm64): `docker compose -f docker/compose.nodes.yml up -d` runs node-1..4.
+- Both worker VMs share a security group with no inbound rules; they talk to the edge over HTTPS and to the chain RPC. Every VM enforces IMDSv2 with hop limit 1, so containers can't reach instance credentials.
 - **Access:** no SSH port; AWS Systems Manager Session Manager only.
-- **Resilience:** Docker restart policies, log rotation, health checks; CloudWatch status-check alarms with automatic instance recovery; AWS Budgets alerts at $60 and $85.
+- **Resilience:** Docker restart policies, log rotation, health checks; CloudWatch status-check alarms with automatic instance recovery; AWS Budgets alerts at $70 and $85.
 - **Web:** Vercel, env `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_CHAIN=diana`, contract addresses from `packages/abi`. When the API is unreachable, pages read state from the chain directly.
 - **Chain config:** `networks/diana.toml` holds RPC, REST, EVM RPC, chain IDs, contract addresses, deploy block, window policy, round windows.
 - **Secrets:** section 4.
