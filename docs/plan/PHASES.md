@@ -31,10 +31,10 @@ Tasks
 - [x] P0.1 Empty uv and pnpm workspaces matching ARCHITECTURE section 2; Foundry installed; CI skeleton (pytest, forge test, web typecheck).
 - [x] P0.3 (18 Nov: 11 keys; deployer funded with 40 QOR by Rounak; 2.5 QOR sent to each actor) Generate mnemonics for the deployer and the 9 service accounts (printed once for Rounak's offline backup, stored locally outside the repo, never committed). Rounak sends about 40 QOR and 200 fUSD from QoreX to the deployer; the deployer funds the rest.
 - [x] P0.4 Register ML-DSA-87 keys with proof of possession for every actor, then KEM keys (both done 18 Nov for all 11).
-- [ ] P0.5 Ship Weeks badges from listed addresses: first hybrid tx, first native AMM swap (pool 2 is fine), first QoreSeal key, first contract containing a PQC precompile address.
+- [x] P0.5 (all four earned 18 Nov) Ship Weeks badges from listed addresses: first hybrid tx, first native AMM swap (pool 2 is fine), first QoreSeal key, first contract containing a PQC precompile address.
 - [x] P0.6 AWS (18 Nov): three `t4g.small` arm64 Ubuntu 24.04 VMs (edge with Elastic IP and ports 80/443; verifiers and nodes with no inbound), 20 GB encrypted gp3, IMDSv2 hop 1, termination protection, Session Manager only, Docker + log rotation + 2 GB swap, gVisor on verifiers, CloudWatch auto-recovery. Budget alerts pending an email address from Rounak.
 - [x] P0.7 `AI_USAGE.md` started as a running log; README credits section started.
-- [ ] P0.8 Add the 5 listed addresses (MEMORY D32) to the project page.
+- [x] P0.8 (18 Nov) Add the 5 listed addresses (MEMORY D32) to the project page.
 
 Spikes (each writes its answer into MEMORY.md)
 - [x] S1 **Windows:** open a scoped window, send an EVM tx inside it, let it lapse, confirm the tx is refused, renew. Measure how many blocks an hour is.

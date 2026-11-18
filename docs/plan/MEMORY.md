@@ -107,7 +107,8 @@ The project's running log. Update at the end of every working session. Newest lo
 - S1 done: windows behave as documented; D24 corrected (caps must cover fees, in uqor). PQProbe deployed with full precompile addresses in its code (D39).
 - S3 done (Python): KEM keys registered for all 11 actors, recipient cards verified against the chain, forged card rejected, 3-recipient seal/open with AAD; Q5 closed (D38). TS round trip and Q16 still open.
 - S4 done: Q3 closed, BERU can't join a native pool (no permissionless registration; pools cost 100 QOR). Swapped 2 QOR → 0.136 fUSD in pool 2 from the deployer (tx 1E6730B2…). BERU's role awaits Rounak's choice (D37).
-- Next: list the 5 addresses on the project page and check badges; Rounak's choice on BERU; S5 sandbox determinism; budget alerts once Rounak gives an email.
+- Project page now lists the 5 addresses (D32). Platform verifies 6 features on-chain (AMM pools, EVM window incl. scoped, hybrid ML-DSA-87 txs, PQC key registration with PoP, QoreSeal key registry, test tokens), 4 of 10 SDKs, 3 of 3 commits. All four Ship Weeks badges earned.
+- Next: Rounak's choice on BERU; S5 sandbox determinism; budget alerts once Rounak gives an email.
 
 ### 2026-11-18
 - Researched the event, past winners and similar projects. Category and scope decided (D1–D13).
