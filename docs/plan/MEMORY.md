@@ -125,7 +125,12 @@ The project's running log. Update at the end of every working session. Newest lo
 - Rule: no Claude attribution in any commit or PR (local commit-msg hook + saved rule); past history left as is by Rounak's choice. PR #7 merged with a clean squash message.
 - P1.5 deployed to diana (deploy block 10,338,199): JobMarket 0xa5FA…2EaDa, NodeRegistry 0x0811…73f1, BeruToken 0x6Cd5…6D34, BeruFaucet 0xCF74…3b67; wiring verified on-chain; real verifier-a/b ML-DSA-87 signatures verify through the deployed JobMarket (211,870 gas per check), a tampered one is rejected. Cost 1.28 QOR.
 - Finding: diana bills at least 50% of an EVM tx's gas limit (every deploy with a 6M limit used exactly 3M). Always size gas limits from eth_estimateGas × ~1.2.
-- Next: P1.6 CI for the new packages, then Phase 2.
+- P1.6 covered by existing CI. Phase 2 started on branch p2-market-client: `strongchar_qore.deployment` + `market` (contract client, WindowManager that renews scoped windows), coordinator service (SQLite + content-addressed envelope store, ML-DSA challenge login, recipient-only blob reads via envelope hints, drafts, verifier-only signature relay, heartbeats, rate limits, security headers) with offline tests.
+- Phase 2 design: chain is the source of truth; services idempotent; nodes only commit/reveal hashes (verifiers replay fully, so no weight uploads); both verifiers sign expiry = round-open block + 10,000.
+- Phase 2 exit check met (19 Nov): job 1 on diana, 2 rounds, 4 nodes; node-4 caught by replay (ReplayMismatch) and slashed both rounds; settlements with both ML-DSA-87 signatures verified on-chain (590–650k gas each); honest nodes claimed; owner opened the final model locally (holdout accuracy 0.310 → 0.777); coordinator data audited ciphertext-only. Tx hashes in the README.
+- Findings: (1) fUSD from the native AMM arrives as a bank coin (`erc20:0x…`) that ERC-20 `balanceOf` doesn't see; it needs `/cosmos.evm.erc20.v1.MsgConvertCoin` (hand-encoded in `strongchar_qore.erc20`; the SDK has no composer). (2) Service logins share an IP (all nodes on one server), so login rate limits key on IP + account. (3) The second verifier's submit races the first (WrongState); verifiers re-check status and treat it as done.
+- J3a (benchmark ranking): with shards fixed to nodes at sealing time, scheduling reduces to eligibility (joined, staked, idle, live heartbeat, benchmark under the floor); reasons are stored per job for the Nodes page. Full ranking stays cut (D23 item 2).
+- Next: Phase 3 (competitions); move the Phase 2 services onto the three VMs in Phase 6.
 
 ### 2026-11-18
 - Researched the event, past winners and similar projects. Category and scope decided (D1–D13).

@@ -1,0 +1,21 @@
+# strongchar-node: the node service.
+[project]
+name = "strongchar-node"
+version = "0.1.0"
+description = "strongChar node service"
+requires-python = ">=3.12,<3.13"
+license = "MIT"
+dependencies = ["strongchar-runtime"]
+
+[project.scripts]
+strongchar-node = "strongchar_node.main:main"
+
+[tool.uv.sources]
+strongchar-runtime = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/strongchar_node"]

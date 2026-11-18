@@ -112,3 +112,22 @@ def split(rows: int, n_shards: int, val_frac: str, holdout_frac: str) -> Split:
         shards.append((start, n))
         start += n
     return Split((0, train), (train, val), (train + val, holdout), tuple(shards))
+
+
+def standardise(c: Canonical, train: tuple[int, int]) -> Canonical:
+    """Scale features to zero mean and unit variance using the train rows only, with fixed-order sums.
+
+    Raw columns such as age (~50) next to smoker (0/1) make SGD diverge; computing the statistics from train rows
+    alone keeps the validation and holdout rows unseen.
+    """
+    import math
+
+    a, n = train
+    x = c.x.astype(np.float64)
+    cols = x[a:a + n].T
+    mean = np.array([math.fsum(col.tolist()) / n for col in cols])
+    std = np.array([math.sqrt(math.fsum(((col - m) ** 2).tolist()) / n) for col, m in zip(cols, mean)])
+    std[std == 0] = 1.0
+    z = ((x - mean) / std).astype(np.float32)
+    card = DatasetCard(dataset_hash(z, c.y), c.card.rows, c.card.x_shape, c.card.task, c.card.classes, "float32")
+    return Canonical(np.ascontiguousarray(z), c.y, card)

@@ -53,3 +53,11 @@ def test_pq_message_signature_verifies_and_is_bound():
     other = pq_message(9800, MARKET, PQKind.SCORES, b"\x05" * 32, 1000)
     assert not pq.verify(acct.pqc.public_key, other, sig)
     assert len(sig) == 4627 and len(acct.pqc.public_key) == 2592
+
+
+def test_convert_coin_encoding_matches_protobuf_layout():
+    from strongchar_qore.erc20 import convert_coin_msg
+
+    m = convert_coin_msg(denom="erc20:0xAB", amount=5, receiver_evm="0x01", sender_qor="qor1x")
+    coin = b"\x0a\x0aerc20:0xAB\x12\x015"
+    assert m["value"] == b"\x0a" + bytes([len(coin)]) + coin + b"\x12\x040x01\x1a\x05qor1x"

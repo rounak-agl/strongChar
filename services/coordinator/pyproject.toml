@@ -1,0 +1,19 @@
+# strongchar-coordinator: the ciphertext-only switchboard and round keeper.
+[project]
+name = "strongchar-coordinator"
+version = "0.1.0"
+description = "strongChar coordinator: ciphertext-only blob store, ML-DSA service auth, drafts, signature relay, round keeper"
+requires-python = ">=3.12,<3.13"
+license = "MIT"
+dependencies = ["fastapi>=0.115,<1", "uvicorn>=0.30,<1", "strongchar-core", "strongchar-qore"]
+
+[tool.uv.sources]
+strongchar-core = { workspace = true }
+strongchar-qore = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/strongchar_coordinator"]
