@@ -105,13 +105,13 @@ Every EVM transaction needs an open window, because every actor has a registered
 
 | Actor | allowedTargets | Max value | Max txs | Blocks |
 |---|---|---|---|---|
-| Data owner / host / entrant (browser) | BeruToken, JobMarket, Competitions | 0 native (BERU moves by ERC-20 calls) | 10 | about 1 hour |
-| Coordinator | JobMarket, Competitions | 0 | per round | rolling |
-| Verifiers | JobMarket, Competitions | 0 | per round | rolling |
-| Nodes | BeruToken, NodeRegistry, JobMarket | 0 | per round | rolling |
+| Data owner / host / entrant (browser) | BeruToken, JobMarket, Competitions | sized from measured gas (fees count) | 10 | about 1 hour (≈2,500 blocks) |
+| Coordinator | JobMarket, Competitions | sized from measured gas | per round | rolling |
+| Verifiers | JobMarket, Competitions | sized from measured gas | per round | rolling |
+| Nodes | BeruToken, NodeRegistry, JobMarket | sized from measured gas | per round | rolling |
 
 Rules:
-- Native value caps are in `aqor` (18 decimals, the EVM's unit), not `uqor` (6 decimals, the bank's unit). Every window above caps native value at 0 because all payments are in BERU.
+- `max_value` is in `uqor` and is consumed by each admitted tx's value **plus gas limit × max fee** (spike S1). Caps are sized per role from measured gas with headroom; no role transfers native value. Opening a window advances the account sequence (= EVM nonce), so open first, then read the nonce.
 - Before each EVM transaction the sender checks its window (`fetchEvmWindow`). If fewer than 20 blocks or 2 txs remain, it renews first. A test lets a window lapse mid-round and checks the round still completes.
 - Windows are closed when an actor goes idle. A stolen classical key alone can open nothing (hybrid signing is required) and can only spend inside an open window's targets.
 - Fallback if windows prove unworkable for services: agent keys with spending rules (`MsgExecuteEVM`, no window, re-link every 30 days).
