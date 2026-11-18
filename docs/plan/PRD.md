@@ -46,7 +46,7 @@ strongChar lets anyone train a model on private data using strangers' computers,
 
 **Training jobs**
 - J1. Post a job: choose dataset (MNIST preset or upload a tabular CSV), model (exact MLP), rounds, nodes, budget. Browser canonicalises and shards, then seals each shard client-side.
-- J2. Fund the job in Beru (BERU) inside a scoped EVM window.
+- J2. Fund the job in fUSD inside a scoped EVM window; if the owner holds only QOR, the app first swaps QOR → fUSD in native AMM pool 2 (hybrid-signed `MsgSwapExactIn`).
 - J3. Round lifecycle on-chain: open → train → commit → reveal → replay → merge and gate → settle, with ciphertext-only blobs.
 - J3a. Node selection is benchmark-ranked: each node reports a timed benchmark in its heartbeat; nodes below the speed floor are skipped; faster nodes are seated first, longest-idle breaks ties; one seat per owner. The Nodes page shows each node's benchmark and why it was or wasn't seated.
 - J4. Nodes and verifiers decrypt locally, train or replay, and re-seal outputs to the next recipients.
@@ -56,11 +56,11 @@ strongChar lets anyone train a model on private data using strangers' computers,
 - J8. The final model is sealed to the data owner only, and decrypted and evaluated in the browser (accuracy on the owner's held-out split).
 
 **Token and AMM**
-- T1. Beru (BERU, 6 decimals) ERC-20 for stakes, budgets and prizes, with a capped faucet.
-- T2. A native AMM pool and a swap path between BERU and fUSD (`MsgCreatePool`, `MsgSwapExactIn`). ERC-20 tokens already trade in native pools as `erc20:0x…` coins (pool 2 is fUSD/QOR). If BERU can't become such a coin (Q3, spike S4), funding swaps QOR↔fUSD in pool 2 and BERU stays EVM-only.
+- T1. Beru (BERU, 6 decimals) ERC-20 for node and verifier stakes and slashing, with a capped faucet. Budgets and prizes are in fUSD (6 decimals), the event's ERC-20 test stablecoin.
+- T2. The native AMM is part of funding: owners and hosts swap QOR → fUSD in pool 2 when they need fUSD. BERU has no native pool (a new ERC-20 can't become a bank coin without governance, and pools cost 100 QOR; spike S4).
 
 **Competitions (Kaggle-style, verified)**
-- C1. Host creates a competition: task, metric (accuracy, macro-F1, RMSE or ROC-AUC), public training data, hidden test features and labels sealed to the verifiers, label commitment `keccak256(keccak256(labels), salt)`, prize locked, deadline, submission cap per entrant.
+- C1. Host creates a competition (prize in fUSD): task, metric (accuracy, macro-F1, RMSE or ROC-AUC), public training data, hidden test features and labels sealed to the verifiers, label commitment `keccak256(keccak256(labels), salt)`, prize locked, deadline, submission cap per entrant.
 - C2. Entrant submits a Python script (code only), sealed to the two verifiers, with its hash committed on-chain.
 - C3. On submission both verifiers run the script in the pinned sandbox (no network, read-only root, CPU only, fixed seed, single thread, time and memory caps). The entry is **valid** only if both runs exit cleanly, the output matches the schema, and both prediction hashes are byte-identical. Validity is shown to the entrant straight away; no score is shown (single final ranking).
 - C4. After the deadline both verifiers score every valid entry against the hidden labels, ML-DSA-sign the score table, and the contract checks both signatures with `pqcVerify`.
@@ -132,4 +132,4 @@ Decided in MEMORY D23. In order: (1) competitions shrink to a scripted CLI demo 
 
 ## 9. Open questions
 
-Tracked in [MEMORY.md](MEMORY.md#3-open-questions). The ones that can still change scope: Q1 (`pqcVerify` message format), Q3 (BERU as a bank coin for the AMM), Q5 (KEM to ML-DSA binding), Q14 (sandbox determinism across architectures), Q16 (browser KEM key custody), Q17 (registration level).
+Tracked in [MEMORY.md](MEMORY.md#3-open-questions). The ones that can still change scope: Q16 (browser KEM key custody), Q17 (registration level).
