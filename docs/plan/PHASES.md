@@ -63,14 +63,14 @@ Exit check: `uv run pytest` and `forge test` green; contracts live on diana with
 ## Phase 2. Sealed training on testnet (22–25 Nov)
 
 Tasks
-- [ ] P2.1 Coordinator: hardened blob store (ARCHITECTURE section 8), job drafts, scheduler, chain indexer, REST API, service and SIWQ auth.
-- [ ] P2.2 Node: fetch → open shard → exact train → commit → reveal → seal weights to {a, b} → upload. Cheat mode for node-4.
-- [ ] P2.3 Verifier: open → replay → judge → merge and gate → sign verdict and settlement with ML-DSA → submit → seal new global weights to next recipients (final round: owner only).
-- [ ] P2.4 Windows: every service checks and renews its window before each EVM tx; lapse test.
+- [x] P2.1 (19 Nov) Coordinator: hardened blob store (ARCHITECTURE section 8), job drafts, scheduler, chain indexer, REST API, service and SIWQ auth.
+- [x] P2.2 (19 Nov; verifiers replay fully, so nodes only commit/reveal hashes and upload no weights) Node: fetch → open shard → exact train → commit → reveal → seal weights to {a, b} → upload. Cheat mode for node-4.
+- [x] P2.3 (19 Nov) Verifier: open → replay → judge → merge and gate → sign verdict and settlement with ML-DSA → submit → seal new global weights to next recipients (final round: owner only).
+- [x] P2.4 (19 Nov) Windows: every service checks and renews its window before each EVM tx; lapse test.
 - [ ] P2.4a Benchmark-ranked node selection (cut item 2).
-- [ ] P2.5 `scripts/demo_job.py` runs a 2-round, 4-node MNIST job on diana and prints every tx hash.
-- [ ] P2.6 Ciphertext-only test (DB, blob dir, logs) and API hardening tests.
-- [ ] P2.7 Native AMM in the funding flow: QOR → fUSD swap in pool 2 with a slippage bound, from Python and the web app (cut item 3 falls back to a scripted swap).
+- [x] P2.5 (19 Nov) `scripts/demo_job.py` runs a 2-round, 4-node MNIST job on diana and prints every tx hash.
+- [x] P2.6 (19 Nov) Ciphertext-only test (DB, blob dir, logs) and API hardening tests.
+- [x] P2.7 (19 Nov) Native AMM in the funding flow: QOR → fUSD swap in pool 2 with a slippage bound, from Python and the web app (cut item 3 falls back to a scripted swap).
 
 Exit check: the demo job completes on diana, node-4 is slashed, honest nodes claim, the owner account opens the final weights with the Python wrapper, ciphertext-only and API tests green.
 
