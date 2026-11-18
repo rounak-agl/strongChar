@@ -1,0 +1,12 @@
+.git
+.venv
+node_modules
+apps/web
+run-logs
+contracts/out
+contracts/cache
+contracts/lib
+.private
+research_notes
+reports
+**/__pycache__

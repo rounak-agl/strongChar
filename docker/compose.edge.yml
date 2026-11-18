@@ -1,0 +1,26 @@
+# Edge server: the coordinator behind Caddy (TLS via the sslip.io hostname). Holds no decryption key.
+services:
+  coordinator:
+    image: strongchar-app:1
+    command: ["python", "-m", "strongchar_coordinator.main"]
+    environment:
+      STRONGCHAR_DATA: /data
+      STRONGCHAR_HOST: 0.0.0.0
+      STRONGCHAR_ALLOWED_ORIGINS: ${WEB_ORIGIN}
+      STRONGCHAR_KEYSTORE: /run/secrets/coordinator-keys
+    volumes: ["coordinator-data:/data"]
+    secrets: [coordinator-keys]
+    read_only: true
+    tmpfs: ["/tmp"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+  caddy:
+    image: caddy:2.10-alpine
+    command: ["caddy", "reverse-proxy", "--from", "${API_HOST}", "--to", "coordinator:8700"]
+    ports: ["80:80", "443:443"]
+    volumes: ["caddy-data:/data"]
+    restart: unless-stopped
+volumes: { coordinator-data: {}, caddy-data: {} }
+secrets:
+  coordinator-keys: { file: ./secrets/coordinator.json } # only the coordinator's own mnemonic, mode 600
