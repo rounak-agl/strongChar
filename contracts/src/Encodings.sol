@@ -58,4 +58,24 @@ library Encodings {
     {
         return abi.encode(PQ_DOMAIN_TAG, chainId, target, kind, payloadHash, expiryBlock);
     }
+
+    function validityPayload(uint256 competition, uint256 entry, bool ok, bytes32 predHash)
+        internal
+        pure
+        returns (bytes32)
+    {
+        return keccak256(abi.encode(competition, entry, ok, predHash));
+    }
+
+    function scoresPayload(uint256 competition, uint256[] memory entries, int256[] memory scores)
+        internal
+        pure
+        returns (bytes32)
+    {
+        return keccak256(abi.encode(competition, entries, scores));
+    }
+
+    function labelCommit(bytes memory labels, bytes32 salt) internal pure returns (bytes32) {
+        return keccak256(abi.encode(keccak256(labels), salt));
+    }
 }

@@ -72,4 +72,19 @@ contract EncodingsTest is Test {
         );
         assertEq(m, json.readBytes(".pqMessage.message"));
     }
+
+    function test_competitionPayloads() public view {
+        assertEq(
+            Encodings.validityPayload(3, 2, true, json.readBytes32(".competition.validity.predHash")),
+            json.readBytes32(".competition.validity.payload")
+        );
+        uint256[] memory es = new uint256[](2);
+        int256[] memory sc = new int256[](2);
+        (es[0], es[1], sc[0], sc[1]) = (0, 2, 700000, -120000);
+        assertEq(Encodings.scoresPayload(3, es, sc), json.readBytes32(".competition.scores.payload"));
+        assertEq(
+            Encodings.labelCommit(json.readBytes(".competition.labels.labels"), json.readBytes32(".competition.labels.salt")),
+            json.readBytes32(".competition.labels.commit")
+        );
+    }
 }

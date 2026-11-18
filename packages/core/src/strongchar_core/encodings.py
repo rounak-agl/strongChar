@@ -104,3 +104,16 @@ def pq_message(chain_id: int, contract: str, kind: PQKind, payload_hash: bytes, 
     """The exact bytes a verifier signs with ML-DSA-87 and the contract passes to pqcVerify (no hashing, spike S2)."""
     return encode(["bytes32", "uint256", "address", "uint8", "bytes32", "uint64"],
                   [PQ_DOMAIN_TAG, chain_id, contract, int(kind), payload_hash, expiry_block])
+
+
+def validity_payload(competition: int, entry: int, ok: bool, pred_hash: bytes) -> bytes:
+    return k256(encode(["uint256", "uint256", "bool", "bytes32"], [competition, entry, ok, pred_hash]))
+
+
+def scores_payload(competition: int, entries: Sequence[int], scores_e6: Sequence[int]) -> bytes:
+    return k256(encode(["uint256", "uint256[]", "int256[]"], [competition, list(entries), list(scores_e6)]))
+
+
+def label_commit(labels: bytes, salt: bytes) -> bytes:
+    """What a host commits to before anyone submits: keccak(abi.encode(keccak(labels), salt))."""
+    return k256(encode(["bytes32", "bytes32"], [k256(labels), salt]))
