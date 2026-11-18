@@ -77,11 +77,11 @@ Exit check: the demo job completes on diana, node-4 is slashed, honest nodes cla
 ## Phase 3. Competitions (25–27 Nov)
 
 Tasks
-- [ ] P3.1 Sandbox image (`sandbox/Dockerfile`, pinned digest, locked numpy, pandas, scikit-learn) and the sandbox runner with gVisor; every rejection reason; containment tests (network, fork bomb, disk fill, huge output).
-- [ ] P3.2 Metrics (accuracy, macro-F1, RMSE, ROC-AUC) with deterministic sums and tests.
-- [ ] P3.3 `Competitions` contract: create, submit, validity (2 signed), scores (2 signed, `pqcVerify`), revealLabels (host, or a verifier after the deadline), settle, refund; Foundry tests.
-- [ ] P3.4 Verifier competition loop: validate on submit, score after the deadline, publish predictions after scoring.
-- [ ] P3.5 `scripts/demo_compete.py`: host on the sensitive CSV, three entries (good, weaker, one that tries the network or crashes), validity, scoring, reveal, settle on diana.
+- [x] P3.1 (19 Nov; runc locally, runsc on the verifiers server) Sandbox image (`sandbox/Dockerfile`, pinned digest, locked numpy, pandas, scikit-learn) and the sandbox runner with gVisor; every rejection reason; containment tests (network, fork bomb, disk fill, huge output).
+- [x] P3.2 (19 Nov; accuracy, macro-F1, RMSE; ROC-AUC cut per D23 item 1) Metrics (accuracy, macro-F1, RMSE, ROC-AUC) with deterministic sums and tests.
+- [x] P3.3 (19 Nov; deploy waiting for Rounak's go-ahead) `Competitions` contract: create, submit, validity (2 signed), scores (2 signed, `pqcVerify`), revealLabels (host, or a verifier after the deadline), settle, refund; Foundry tests.
+- [x] P3.4 (19 Nov) Verifier competition loop: validate on submit, score after the deadline, publish predictions after scoring.
+- [ ] P3.5 (written 19 Nov; runs after the Competitions deploy) `scripts/demo_compete.py`: host on the sensitive CSV, three entries (good, weaker, one that tries the network or crashes), validity, scoring, reveal, settle on diana.
 
 Exit check: the demo competition completes on diana; the bad entry is rejected with the right reason; scores are PQ-verified on-chain; labels verify against the commitment.
 
