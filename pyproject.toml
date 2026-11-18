@@ -3,12 +3,13 @@
 name = "strongchar-workspace"
 version = "0.0.0"
 requires-python = ">=3.12,<3.13"
-dependencies = ["strongchar-qore"]
+dependencies = ["strongchar-core", "strongchar-qore"]
 
 [tool.uv.workspace]
 members = ["packages/*"]
 
 [tool.uv.sources]
+strongchar-core = { workspace = true }
 strongchar-qore = { workspace = true }
 
 [dependency-groups]
