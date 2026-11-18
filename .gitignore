@@ -36,3 +36,4 @@ accounts*.json
 
 # Local demo runs
 run-logs/
+*.tsbuildinfo
