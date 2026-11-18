@@ -14,6 +14,10 @@ The project's running log. Update at the end of every working session. Newest lo
 - An EVM transaction from an account with a registered ML-DSA key needs an open EVM window (event FAQ). Agent keys with spending rules (`MsgExecuteEVM`) need no window.
 - Precompiles: `pqcVerify(bytes pubkey, bytes sig, bytes msg) returns (bool)` at `0x…0a01`, 25,000 + 8 gas/byte (≈85–90k typical). `pqcKeyStatus(address) returns (bool registered, uint8 algorithmId, bytes pubkey, bool possessionProven)` at `0x…0a02`, 2,500 gas, algorithmId 1 = ML-DSA-87. Write addresses in lowercase in Solidity. Inactive precompiles return empty data, so typed calls revert.
 - Sizes: ML-DSA-87 public key 2,592 bytes, signature 4,627 bytes.
+- `pqcVerify` (S2, 18 Nov): verifies plain ML-DSA-87 over the exact `msg` bytes (no hashing, empty context). A direct call with a 160-byte message estimates 313,660 gas including calldata (≈0.035 QOR at 112.5 gwei).
+- PQ key status: a key registered through QoreX shows `registered = true` but `possessionProven = false`. Proof of possession needs `MsgRegisterPQCKeyV2` with a proof (SDK `sign_proof_of_possession`). Our contracts require it only of nodes and verifiers.
+- `qorechain-pqc` depends on `liboqs-python`, which downloads and compiles liboqs from GitHub on first import unless liboqs is already installed. Docker images must build liboqs at image build time.
+- The EVM RPC returns 403 to Python's default User-Agent; clients send a generic one.
 - Test tokens are bank coins named `erc20:0x…`: FestUSD (6 decimals) `erc20:0x97143B771D34ddb9130b807b135Ae675A5a963CA`, FestETH (18) `…0x02292293…1c28`, FestBTC (8) `…0x4604e7E4…451A`. Native AMM pool 2 is fUSD/QOR.
 - QoreX `signArbitrary` signs a prefixed message (1–4096 bytes); `verifyMessageWithChain` checks both halves.
 - Packages: PyPI `qorechain-sdk` 0.14 (import `qorsdk`), `qorechain-qoresign` 0.2 (`qoresign`), `qorechain-qoreseal` 0.1 (`qoreseal`), `qorechain-pqc` 0.2.3 (`qorpqc`). npm `@qorechain/sdk` 0.14, `@qorechain/evm`, `@qorechain/react`, `@qorechain/qoreseal` 0.1, `@qorechain/qoresign` 0.2, `@qorechain/pqc`, `@qorechain/qorex-rainbowkit`, `@qorechain/qorex-wallet-mock`, `@qorechain/wallet-adapter`, `create-qorechain-dapp` 0.14, `@qorechain/mcp`.
@@ -59,12 +63,14 @@ The project's running log. Update at the end of every working session. Newest lo
 | D32 | 18 Nov | Project page lists 5 addresses: deployer, verifier-a, coordinator, demo data owner, node-1; each declared feature is exercised by at least one of them | Features only verify from listed addresses |
 | D33 | 18 Nov | `AI_USAGE.md` kept as a running log from day one; README credits every library, kit and template | Event rules and AI-Native criteria |
 | D34 | 18 Nov | Verifiers pinned to arm64; competition records state image digest and architecture | Floating-point results likely differ across architectures (Q14) |
+| D35 | 18 Nov | Contracts pass `pqcVerify` the exact `abi.encode(...)` message bytes; verifiers sign those same bytes with `qorsdk.pqc.pqc_sign` (deterministic) | Spike S2 |
+| D36 | 18 Nov | Actor keys are unified eth-native accounts (`qorsdk.unified`, coin type 60): one key gives the `qor1…` and `0x…` forms plus a seeded ML-DSA-87 key, matching QoreX. Stored in `~/.config/strongchar/accounts.json` (mode 600), outside the repo | Same derivation as the wallet adapter |
 
 ## 3. Open questions
 
 | # | Question | How it gets answered | Status |
 |---|---|---|---|
-| Q1 | Does `pqcVerify` take raw bytes, a digest, or apply a context string? | Spike S2 with free `eth_call` against diana | Open |
+| Q1 | Does `pqcVerify` take raw bytes, a digest, or apply a context string? | Spike S2: plain FIPS-204 over the exact `msg` bytes, empty context, no hashing. Tampered or over-long signatures rejected | Closed (D35) |
 | Q2 | Can an account with a registered PQ key send EVM txs without a window? | Event FAQ: no | Closed (D24) |
 | Q3 | Does our own ERC-20 (BERU) become an `erc20:0x…` bank coin that a native AMM pool can hold? (Pools with `erc20:` coins already exist) | Spike S4 | Open, narrowed |
 | Q4 | Cancun opcodes and randomness on chain 9800? | Chain config: Prague active; `prevrandao` = 0 | Closed (D25) |
@@ -83,6 +89,14 @@ The project's running log. Update at the end of every working session. Newest lo
 | Q17 | Does the registration "level" (set to Quantum Pass) limit the categories a person can win in? | Ask in Discord #builders | Open, Rounak |
 
 ## 4. Log
+
+### 2026-11-18 (Phase 0)
+- Phase 0 started on branch `phase0-foundations`: uv workspace with `strongchar-qore` (QoreChain SDKs pinned exactly), pnpm workspace, Foundry with forge-std v1.17.0 and OpenZeppelin v5.7.0 as submodules, CI workflow.
+- Key store created for 11 actors (deployer, coordinator, verifier-a/b, node-1..4, data-owner, host, entrant); tests green.
+- `PQ` library for both precompiles with 5 Foundry tests (mocked precompiles).
+- Spike S2 done: Q1 closed (D35). Rounak's QoreX key is registered but not possession-proven.
+- AI_USAGE.md started; README credits started.
+- Next: Rounak funds the deployer; then PoP key registration, windows (S1), QoreSeal (S3), BERU (S4); AWS VMs on approval.
 
 ### 2026-11-18
 - Researched the event, past winners and similar projects. Category and scope decided (D1–D13).

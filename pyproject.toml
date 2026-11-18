@@ -1,0 +1,23 @@
+# uv workspace root for strongChar's Python packages, apps and services.
+[project]
+name = "strongchar-workspace"
+version = "0.0.0"
+requires-python = ">=3.12,<3.13"
+dependencies = ["strongchar-qore"]
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.uv.sources]
+strongchar-qore = { workspace = true }
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[tool.pytest.ini_options]
+markers = ["live: talks to qorechain-diana; skipped in CI"]
+addopts = "-m 'not live'"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"

@@ -1,0 +1,4 @@
+# pnpm workspace for strongChar's TypeScript packages.
+packages:
+  - "apps/web"
+  - "packages/abi"

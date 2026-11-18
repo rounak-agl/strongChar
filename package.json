@@ -1,0 +1,8 @@
+{
+  "name": "strongchar",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "typecheck": "pnpm -r --if-present typecheck"
+  }
+}

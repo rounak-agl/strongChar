@@ -30,3 +30,6 @@ services/coordinator/data/
 
 # Local-only agent rules
 CLAUDE.local.md
+
+# Local key store lives outside the repo (~/.config/strongchar); never copy it here
+accounts*.json
