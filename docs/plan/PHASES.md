@@ -90,7 +90,7 @@ Cut line (cut item 1, first to go): if behind on 26 Nov evening, competitions be
 ## Phase 4. Web app (25–28 Nov)
 
 Tasks
-- [ ] P4.1 Visual style: palette, type, mark (DESIGN section 2).
+- [x] P4.1 (19 Nov) Visual style: palette, type, mark (DESIGN section 2).
 - [ ] P4.2 Next.js app with `create-qorechain-dapp` packages; QoreX RainbowKit connector; SIWQ.
 - [ ] P4.3 Tokens, fonts, signature components (`SealChip`, `ProofStamp`, `WindowMeter`, `RoundTimeline`, `KeyCard`, `SandboxReport`, `Leaderboard`).
 - [ ] P4.4 `/start` key setup flow (with KEM key backup per S3); `/jobs` flows with client-side sealing and final-model opening; `/compete` flows with client-side script sealing; `/sealed`; landing; profile; `/how`. Chain fallback when the API is down.

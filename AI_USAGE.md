@@ -28,6 +28,7 @@ strongChar is built by one person (Rounak) working with an AI coding agent (Clau
 | 18–19 Nov | Contracts (Beru token and faucet, NodeRegistry, JobMarket) with 25 Foundry tests; deploy script; deployed to diana with a live signature check | Reviewed and approved the merge and the deploy |
 | 19 Nov | Phase 2: contract client and window manager, coordinator (ML-DSA login, recipient-only blob reads, keeper), node and verifier services, demo job run end to end on diana; found and fixed the fUSD bank-coin vs ERC-20 split, a shared-IP rate limit and a verifier submit race | Asked for continuous work with self-review and merging |
 | 19 Nov | Phase 3: sandbox runner with containment tests, deterministic metrics, Competitions contract with tests, verifier competition loop, competition demo | Deploy held for approval |
+| 19 Nov | Phase 4 read-only web app: tokens, components, live jobs, nodes and sealed-store pages | — |
 | 18 Nov | AWS servers following AWS's EC2 launch guidance; found the Free plan refuses `t4g.medium` and proposed alternatives with prices; bootstrap script with gVisor | Approved spending, chose two small worker servers |
 
 ## Where AI was not trusted blindly
