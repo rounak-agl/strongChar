@@ -59,5 +59,18 @@ class Coordinator:
     def signatures(self, job: int, rnd: int) -> list[dict]:
         return self.http.get(f"{self.base}/v1/rounds/{job}/{rnd}/signatures").raise_for_status().json()["signatures"]
 
+    def attest(self, topic: str, body: dict) -> None:
+        self.http.post(f"{self.base}/v1/attest/{topic}", json=body, headers=self._auth()).raise_for_status()
+
+    def attestations(self, topic: str) -> list[dict]:
+        return self.http.get(f"{self.base}/v1/attest/{topic}").raise_for_status().json()["attestations"]
+
+    def put_public(self, data: bytes, name: str) -> str:
+        r = self.http.post(f"{self.base}/v1/public", content=data, headers={**self._auth(), "X-Name": name})
+        return r.raise_for_status().json()["id"]
+
+    def get_public(self, file_id: str) -> bytes:
+        return self.http.get(f"{self.base}/v1/public/{file_id}").raise_for_status().content
+
     def heartbeat(self, body: dict) -> None:
         self.http.post(f"{self.base}/v1/heartbeat", json=body, headers=self._auth()).raise_for_status()

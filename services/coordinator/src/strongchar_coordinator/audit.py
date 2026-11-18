@@ -13,7 +13,7 @@ MARKERS = [b"strongchar-shard/1", b"age,bmi,"]
 def scan(root: Path, extra: list[bytes] = ()) -> list[tuple[str, bytes]]:
     hits = []
     for path in root.rglob("*"):
-        if path.is_file():
+        if path.is_file() and "public" not in path.relative_to(root).parts:  # public by design
             data = path.read_bytes()
             hits += [(str(path), m) for m in (*MARKERS, *extra) if m in data]
     return hits

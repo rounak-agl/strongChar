@@ -21,7 +21,7 @@ from qorsdk import hex_to_bech32
 from .auth import Auth
 from .store import Store
 
-PRIVATE_KINDS = {"shard": 60, "val": 60, "global": 25, "model": 25, "weights": 25, "script": 2,
+PRIVATE_KINDS = {"shard": 60, "test": 60, "val": 60, "global": 25, "model": 25, "weights": 25, "script": 2,
                  "test-features": 60, "test-labels": 10}  # MB cap per blob
 QUOTA_BYTES = 400 * 2**20
 MAX_DRAFT_BYTES = 2 * 2**20
@@ -92,7 +92,7 @@ def spec_hash(spec: dict) -> str:
     return "0x" + keccak(canonical(spec)).hex()
 
 
-BLOB_FIELDS = ("shards", "val", "testFeatures", "testLabels")  # manifest fields that name uploaded envelopes
+BLOB_FIELDS = ("shards", "val", "test")  # manifest fields that name uploaded envelopes
 
 
 def blob_ids(manifest: dict) -> list[str]:
@@ -109,7 +109,7 @@ def create_app(store: Store, chain: ChainView, allowed_origins: list[str] | None
     upload_limit = RateLimiter(120, 60)
     if allowed_origins:
         app.add_middleware(CORSMiddleware, allow_origins=allowed_origins, allow_methods=["GET", "POST"],
-                           allow_headers=["authorization", "content-type", "x-kind"])
+                           allow_headers=["authorization", "content-type", "x-kind", "x-name"])
 
     @app.middleware("http")
     async def security_headers(request: Request, call_next):
@@ -256,6 +256,45 @@ def create_app(store: Store, chain: ChainView, allowed_origins: list[str] | None
         if card is None:
             raise HTTPException(404, "no card for this address")
         return {"card": card}
+
+    TOPIC = r"^comp-[0-9]{1,9}-(run|validity|scores)(-[0-9]{1,4})?$"
+
+    @app.post("/v1/attest/{topic}")
+    def attest(topic: str, body: dict[str, Any], who: Caller) -> dict:
+        """Verifier-only notes for competitions: raw run results, then the signed verdicts and score tables."""
+        import re
+
+        if not re.match(TOPIC, topic) or not chain.is_verifier(who):
+            raise HTTPException(403, "only the verifiers post competition attestations")
+        if len(json.dumps(body)) > 64 * 1024:
+            raise HTTPException(413, "attestation too large")
+        store.attest(topic, who, body)
+        return {"ok": True}
+
+    @app.get("/v1/attest/{topic}")
+    def get_attest(topic: str) -> dict:
+        return {"attestations": store.attestations(topic)}
+
+    @app.post("/v1/public")
+    async def put_public(request: Request, who: Caller, x_name: Annotated[str, Header()]) -> dict:
+        """Data that is public by design (a competition's training set, predictions published after the reveal)."""
+        if not upload_limit.allow(who):
+            raise HTTPException(429, "too many uploads, slow down")
+        raw = await request.body()
+        if len(raw) > 30 * 2**20 or not raw.isascii() or len(x_name) > 80:
+            raise HTTPException(400, "public files are ASCII text up to 30 MB")
+        file_id = "0x" + keccak(raw).hex()
+        store.put_public(file_id, x_name, raw, who)
+        return {"id": file_id}
+
+    @app.get("/v1/public/{file_id}")
+    def get_public(file_id: str):
+        from fastapi.responses import Response
+
+        got = store.get_public(file_id)
+        if got is None:
+            raise HTTPException(404, "no such file")
+        return Response(got[1], media_type="text/csv", headers={"X-Name": got[0]})
 
     @app.get("/v1/nodes")
     def nodes() -> dict:
