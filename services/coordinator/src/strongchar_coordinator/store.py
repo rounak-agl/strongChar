@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS signatures (job INTEGER, round INTEGER, verifier TEXT
   settlement TEXT, signature TEXT, PRIMARY KEY (job, round, verifier));
 CREATE TABLE IF NOT EXISTS heartbeats (node TEXT PRIMARY KEY, body TEXT NOT NULL, seen REAL NOT NULL);
 CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS cards (address TEXT PRIMARY KEY, card TEXT NOT NULL);
 """
 
 
@@ -94,6 +95,13 @@ class Store:
     def live_nodes(self, within_s: float = 120) -> dict[str, dict]:
         rows = self._q("SELECT node, body, seen FROM heartbeats WHERE seen > ?", (time.time() - within_s,))
         return {n: {**json.loads(b), "seen": s} for n, b, s in rows}
+
+    def put_card(self, address: str, card: str) -> None:
+        self._q("INSERT OR REPLACE INTO cards VALUES (?,?)", (address.lower(), card))
+
+    def get_card(self, address: str) -> str | None:
+        rows = self._q("SELECT card FROM cards WHERE address = ?", (address.lower(),))
+        return rows[0][0] if rows else None
 
     def kv_get(self, k: str, default: str | None = None) -> str | None:
         rows = self._q("SELECT v FROM kv WHERE k = ?", (k,))

@@ -114,3 +114,21 @@ def test_security_headers(world):
     client, _ = world
     r = client.get("/v1/health")
     assert r.headers["x-content-type-options"] == "nosniff" and r.headers["cache-control"] == "no-store"
+
+
+def test_coordinator_stores_only_ciphertext(world, tmp_path):
+    import numpy as np
+    from strongchar_datasets.shards import encode
+
+    from strongchar_coordinator.audit import scan
+
+    client, ps = world
+    rows = encode("0x" + "ab" * 32, 0, np.arange(40, dtype=np.float32).reshape(10, 4), np.arange(10))
+    secret = b"PATIENT-RECORD-7731"
+    h = login(client, ps["owner"])
+    for payload in (rows, rows + secret):
+        text = envelope([ps["node"], ps["verifier"]], payload)
+        assert client.post("/v1/blobs", content=text.encode(), headers={**h, "X-Kind": "shard"}).status_code == 200
+    root = tmp_path  # the Store in the fixture writes here
+    assert any(root.rglob("*")), "nothing was stored"
+    assert scan(root, [secret]) == []

@@ -16,6 +16,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from strongchar_core.evidence import canonical
 
+from qorsdk import hex_to_bech32
+
 from .auth import Auth
 from .store import Store
 
@@ -82,13 +84,20 @@ class HeartbeatBody(BaseModel):
     selftest: str = Field(max_length=80)
 
 
+def _bech32_of(evm: str) -> str:
+    return hex_to_bech32(evm).lower()
+
+
 def spec_hash(spec: dict) -> str:
     return "0x" + keccak(canonical(spec)).hex()
 
 
+BLOB_FIELDS = ("shards", "val", "testFeatures", "testLabels")  # manifest fields that name uploaded envelopes
+
+
 def blob_ids(manifest: dict) -> list[str]:
     out: list[str] = []
-    for v in manifest.values():
+    for v in (manifest.get(f) for f in BLOB_FIELDS if f in manifest):
         out += v if isinstance(v, list) else [v]
     return [b for b in out if isinstance(b, str)]
 
@@ -130,7 +139,8 @@ def create_app(store: Store, chain: ChainView, allowed_origins: list[str] | None
 
     @app.get("/v1/auth/challenge")
     def challenge(address: str, request: Request) -> dict:
-        if not login_limit.allow(client_key(request)):
+        # Per IP and account: several services legitimately share one IP (all nodes on one server).
+        if not login_limit.allow(f"{client_key(request)}|{address.lower()}"):
             raise HTTPException(429, "too many sign-in attempts, wait a minute")
         if not (address.startswith("0x") and len(address) == 42):
             raise HTTPException(400, "bad address")
@@ -138,7 +148,7 @@ def create_app(store: Store, chain: ChainView, allowed_origins: list[str] | None
 
     @app.post("/v1/auth/login")
     def login(body: LoginBody, request: Request) -> dict:
-        if not login_limit.allow(client_key(request)):
+        if not login_limit.allow(f"{client_key(request)}|{body.address.lower()}"):
             raise HTTPException(429, "too many sign-in attempts, wait a minute")
         token = auth.login(body.address, body.signature)
         if token is None:
@@ -224,6 +234,28 @@ def create_app(store: Store, chain: ChainView, allowed_origins: list[str] | None
     def heartbeat(body: HeartbeatBody, who: Caller) -> dict:
         store.heartbeat(who, body.model_dump())
         return {"ok": True}
+
+    class CardBody(BaseModel):
+        card: str = Field(max_length=20000)
+
+    @app.post("/v1/cards")
+    def put_card(body: CardBody, who: Caller) -> dict:
+        """An account publishes its own recipient card; senders still verify it against the chain before sealing."""
+        try:
+            fields = qs.recipient_card_from_json(body.card)
+        except Exception:
+            raise HTTPException(400, "not a recipient card") from None
+        if fields.address.lower() not in (who, _bech32_of(who)):
+            raise HTTPException(403, "you can only publish your own card")
+        store.put_card(who, body.card)
+        return {"ok": True}
+
+    @app.get("/v1/cards/{address}")
+    def get_card(address: str) -> dict:
+        card = store.get_card(address)
+        if card is None:
+            raise HTTPException(404, "no card for this address")
+        return {"card": card}
 
     @app.get("/v1/nodes")
     def nodes() -> dict:
