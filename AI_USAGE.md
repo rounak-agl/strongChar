@@ -18,8 +18,10 @@ strongChar is built by one person (Rounak) working with an AI coding agent (Clau
 | 18 Nov | Red-team review of the plan (security, rules, schedule) and the resulting fixes D20–D34 | Chose two-VM hosting, the tagline, the cut order |
 | 18 Nov | AWS CLI and agent toolkit setup; hosting cost check | Created the AWS project, signed in, picked the help level |
 | 18 Nov | Public repo, project page form, GitHub App selection | Approved publishing, clicked Install on the GitHub App |
-| 18 Nov | Phase 0 scaffolding: uv and pnpm workspaces, Foundry, CI, key store with tests, `PQ` precompile library with tests | Review and merge pending |
+| 18 Nov | Phase 0 scaffolding: uv and pnpm workspaces, Foundry, CI, key store with tests, `PQ` precompile library with tests | Reviewed; told the agent to merge |
 | 18 Nov | Spike S2: found `pqcVerify`'s exact message format with live `eth_call`s and measured its gas | — |
+| 18 Nov | Chain wrapper (simulate, hybrid sign, broadcast, confirm); proof-of-possession key registration and funding for 11 actors | Funded the deployer from QoreX |
+| 18 Nov | AWS servers following AWS's EC2 launch guidance; found the Free plan refuses `t4g.medium` and proposed alternatives with prices; bootstrap script with gVisor | Approved spending, chose two small worker servers |
 
 ## Where AI was not trusted blindly
 

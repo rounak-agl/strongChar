@@ -29,10 +29,10 @@ Done on 18 Nov
 
 Tasks
 - [x] P0.1 Empty uv and pnpm workspaces matching ARCHITECTURE section 2; Foundry installed; CI skeleton (pytest, forge test, web typecheck).
-- [ ] P0.3 (keys done 18 Nov; funding pending) Generate mnemonics for the deployer and the 9 service accounts (printed once for Rounak's offline backup, stored locally outside the repo, never committed). Rounak sends about 40 QOR and 200 fUSD from QoreX to the deployer; the deployer funds the rest.
-- [ ] P0.4 Register ML-DSA-87 keys with proof of possession for every actor, then KEM keys.
+- [x] P0.3 (18 Nov: 11 keys; deployer funded with 40 QOR by Rounak; 2.5 QOR sent to each actor) Generate mnemonics for the deployer and the 9 service accounts (printed once for Rounak's offline backup, stored locally outside the repo, never committed). Rounak sends about 40 QOR and 200 fUSD from QoreX to the deployer; the deployer funds the rest.
+- [ ] P0.4 Register ML-DSA-87 keys with proof of possession for every actor (done 18 Nov, all 11 proven), then KEM keys.
 - [ ] P0.5 Ship Weeks badges from listed addresses: first hybrid tx, first native AMM swap (pool 2 is fine), first QoreSeal key, first contract containing a PQC precompile address.
-- [ ] P0.6 AWS: edge VM `t4g.small` (Elastic IP, ports 80/443) and worker VM `t4g.medium` (no inbound), both arm64 Ubuntu LTS with 20 GB gp3; Session Manager access; Docker, gVisor on the worker, Caddy on the edge; budget alerts at $60 and $85; CloudWatch auto-recovery. Asked of Rounak before creating, since it spends credits.
+- [x] P0.6 AWS (18 Nov): three `t4g.small` arm64 Ubuntu 24.04 VMs (edge with Elastic IP and ports 80/443; verifiers and nodes with no inbound), 20 GB encrypted gp3, IMDSv2 hop 1, termination protection, Session Manager only, Docker + log rotation + 2 GB swap, gVisor on verifiers, CloudWatch auto-recovery. Budget alerts pending an email address from Rounak.
 - [x] P0.7 `AI_USAGE.md` started as a running log; README credits section started.
 - [ ] P0.8 Add the 5 listed addresses (MEMORY D32) to the project page.
 

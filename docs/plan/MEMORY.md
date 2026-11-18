@@ -49,7 +49,7 @@ The project's running log. Update at the end of every working session. Newest lo
 | D18 | 18 Nov | Visual style decided in Phase 4 (palette, type, mark); light restyle of a standard component system | Your choice |
 | D19 | 18 Nov | Node selection is benchmark-ranked: timed benchmark in heartbeats, too-slow nodes skipped, faster preferred, longest-idle as tiebreak | Your choice; a pass/fail self-test alone can't prefer faster machines |
 | D20 | 18 Nov | Public docs describe strongChar's own design only; working notes stay in gitignored files | Keeps the public plan focused and accurate |
-| D21 | 18 Nov | Two VMs in ap-southeast-2: edge `t4g.small` (coordinator + Caddy, no decryption keys, ports 80/443) and worker `t4g.medium` (verifiers, nodes, sandbox runner, no inbound ports). About $54 to 16 Dec | Red-team: one box holding verifier keys made "the server only holds ciphertext" misleading |
+| D21 | 18 Nov | Three `t4g.small` VMs (arm64, 2 GB + 2 GB swap) in ap-southeast-2: edge (coordinator + Caddy, no decryption keys, ports 80/443, Elastic IP 32.237.26.58), verifiers (both verifiers + gVisor sandbox runner, no inbound) and nodes (4 nodes, no inbound). About $59 to 16 Dec | Red-team split of keys from the public box; the AWS Free plan refuses `t4g.medium`, so the worker became two smalls, which also separates verifiers from nodes |
 | D22 | 18 Nov | Tagline: "Your data, sealed to only the machines that need it. Every step proven." | Red-team: "no one can read" was false (nodes and verifiers read what they work on) |
 | D23 | 18 Nov | Cut order if behind: (1) competitions shrink to a scripted CLI demo with a read-only page and accuracy/RMSE only; (2) benchmark ranking → plain eligibility; (3) BERU AMM pool → pool-2 swap for the badge; (4) in-UI window controls → auto-opened windows; (5) side entry → read-only checker. Never cut: sealed job end to end, browser seal/open, PQ-verified verdicts and settlement, slashing | Your choice: protect sealed training and web polish |
 | D24 | 18 Nov | EVM windows are mandatory; every sender checks and renews its window before each EVM tx; native value caps 0 (`aqor` units) | FAQ confirms windows are required once an ML-DSA key is registered |
@@ -58,7 +58,7 @@ The project's running log. Update at the end of every working session. Newest lo
 | D27 | 18 Nov | No stuck money: stalled-job refund, no-valid-entry refund, verifiers may reveal labels after the reveal deadline, honest stake always withdrawable | Red-team: several paths could lock funds |
 | D28 | 18 Nov | Blob store: envelope parsed, content-addressed, size caps per kind, auth + quotas, recipient-only fetch, unreferenced uploads expire in 1 h | Red-team: prefix check alone allowed junk uploads and scraping |
 | D29 | 18 Nov | Sandbox runner is the only holder of the Docker socket; gVisor, no caps, non-root, tmpfs and output caps; per-service secrets from SSM | Red-team: socket in verifiers meant root on the host |
-| D30 | 18 Nov | API hostname `<elastic-ip>.sslip.io` with Caddy TLS; no SSH (Session Manager only); CloudWatch auto-recovery; budget alerts $60 / $85 | No domain owned; smaller attack surface |
+| D30 | 18 Nov | API hostname `<elastic-ip>.sslip.io` with Caddy TLS; no SSH (Session Manager only); CloudWatch auto-recovery; budget alerts $70 / $85 | No domain owned; smaller attack surface |
 | D31 | 18 Nov | Signed payloads carry job/round/entry and an expiry; commitments include the node address; AAD includes chain, contract and recipient-set hash | Red-team: replay and copy gaps |
 | D32 | 18 Nov | Project page lists 5 addresses: deployer, verifier-a, coordinator, demo data owner, node-1; each declared feature is exercised by at least one of them | Features only verify from listed addresses |
 | D33 | 18 Nov | `AI_USAGE.md` kept as a running log from day one; README credits every library, kit and template | Event rules and AI-Native criteria |
@@ -96,7 +96,9 @@ The project's running log. Update at the end of every working session. Newest lo
 - `PQ` library for both precompiles with 5 Foundry tests (mocked precompiles).
 - Spike S2 done: Q1 closed (D35). Rounak's QoreX key is registered but not possession-proven.
 - AI_USAGE.md started; README credits started.
-- Next: Rounak funds the deployer; then PoP key registration, windows (S1), QoreSeal (S3), BERU (S4); AWS VMs on approval.
+- Deployer funded (40 QOR from Rounak's QoreX). PoP-registered the deployer's ML-DSA key (tx D746BD18…, 0.063 QOR), sent 2.5 QOR to each of the other 10 actors with hybrid-signed txs, PoP-registered all 10. All 11 show `possession_proven: true`. Chain wrapper `strongchar_qore.chain` (simulate → sign → broadcast → confirm).
+- AWS: the Free plan refuses `t4g.medium`; D21 changed to three `t4g.small` VMs. Launched and bootstrapped (Docker, swap, log rotation, gVisor on verifiers, verified). Edge IP 32.237.26.58 → API host 32-237-26-58.sslip.io.
+- Next: windows (S1), QoreSeal and KEM keys (S3), BERU (S4), pool-2 swap and PQC-contract badges; budget alerts once Rounak gives an email.
 
 ### 2026-11-18
 - Researched the event, past winners and similar projects. Category and scope decided (D1–D13).
