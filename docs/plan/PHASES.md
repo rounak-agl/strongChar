@@ -28,17 +28,17 @@ Done on 18 Nov
 - [x] P0.6a AWS project on the free plan ($100 credits), Region ap-southeast-2, CLI signed in locally.
 
 Tasks
-- [ ] P0.1 Empty uv and pnpm workspaces matching ARCHITECTURE section 2; Foundry installed; CI skeleton (pytest, forge test, web typecheck).
-- [ ] P0.3 Generate mnemonics for the deployer and the 9 service accounts (printed once for Rounak's offline backup, stored locally outside the repo, never committed). Rounak sends about 40 QOR and 200 fUSD from QoreX to the deployer; the deployer funds the rest.
+- [x] P0.1 Empty uv and pnpm workspaces matching ARCHITECTURE section 2; Foundry installed; CI skeleton (pytest, forge test, web typecheck).
+- [ ] P0.3 (keys done 18 Nov; funding pending) Generate mnemonics for the deployer and the 9 service accounts (printed once for Rounak's offline backup, stored locally outside the repo, never committed). Rounak sends about 40 QOR and 200 fUSD from QoreX to the deployer; the deployer funds the rest.
 - [ ] P0.4 Register ML-DSA-87 keys with proof of possession for every actor, then KEM keys.
 - [ ] P0.5 Ship Weeks badges from listed addresses: first hybrid tx, first native AMM swap (pool 2 is fine), first QoreSeal key, first contract containing a PQC precompile address.
 - [ ] P0.6 AWS: edge VM `t4g.small` (Elastic IP, ports 80/443) and worker VM `t4g.medium` (no inbound), both arm64 Ubuntu LTS with 20 GB gp3; Session Manager access; Docker, gVisor on the worker, Caddy on the edge; budget alerts at $60 and $85; CloudWatch auto-recovery. Asked of Rounak before creating, since it spends credits.
-- [ ] P0.7 `AI_USAGE.md` started as a running log; README credits section started.
+- [x] P0.7 `AI_USAGE.md` started as a running log; README credits section started.
 - [ ] P0.8 Add the 5 listed addresses (MEMORY D32) to the project page.
 
 Spikes (each writes its answer into MEMORY.md)
 - [ ] S1 **Windows:** open a scoped window, send an EVM tx inside it, let it lapse, confirm the tx is refused, renew. Measure how many blocks an hour is.
-- [ ] S2 **pqcVerify format (Q1):** sign a message with ML-DSA-87 in Python and call `pqcVerify` through `eth_call` (free) with raw bytes, a keccak digest and with any context string, until one returns true. Then one real tx to measure gas.
+- [x] S2 **pqcVerify format (Q1):** sign a message with ML-DSA-87 in Python and call `pqcVerify` through `eth_call` (free) with raw bytes, a keccak digest and with any context string, until one returns true. Then one real tx to measure gas.
 - [ ] S3 **QoreSeal (Q5, Q16):** Python seal → TS open and TS seal → Python open, multi-recipient, with AAD; register a KEM key; check recipient cards against the ML-DSA key; find out whether QoreX can hold a KEM key and open envelopes for a dApp.
 - [ ] S4 **BERU in the AMM (Q3):** deploy a test ERC-20 and check whether it appears as an `erc20:0x…` bank coin and can seed a pool. If not, use pool 2 per PRD T2.
 - [ ] S5 **Sandbox determinism (Q14):** run one sklearn script twice on the worker VM (arm64) and on the laptop (x86); hashes must match within each machine. Record whether they match across.
