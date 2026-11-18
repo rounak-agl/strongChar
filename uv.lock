@@ -6,6 +6,7 @@ requires-python = "==3.12.*"
 members = [
     "strongchar-core",
     "strongchar-qore",
+    "strongchar-workloads",
     "strongchar-workspace",
 ]
 
@@ -1325,12 +1326,28 @@ requires-dist = [
 ]
 
 [[package]]
+name = "strongchar-workloads"
+version = "0.1.0"
+source = { editable = "packages/workloads" }
+dependencies = [
+    { name = "numpy" },
+    { name = "strongchar-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "numpy", specifier = ">=2,<3" },
+    { name = "strongchar-core", editable = "packages/core" },
+]
+
+[[package]]
 name = "strongchar-workspace"
 version = "0.0.0"
 source = { virtual = "." }
 dependencies = [
     { name = "strongchar-core" },
     { name = "strongchar-qore" },
+    { name = "strongchar-workloads" },
 ]
 
 [package.dev-dependencies]
@@ -1343,6 +1360,7 @@ dev = [
 requires-dist = [
     { name = "strongchar-core", editable = "packages/core" },
     { name = "strongchar-qore", editable = "packages/qore" },
+    { name = "strongchar-workloads", editable = "packages/workloads" },
 ]
 
 [package.metadata.requires-dev]
