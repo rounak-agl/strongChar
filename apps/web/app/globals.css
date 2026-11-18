@@ -1,0 +1,59 @@
+/* Tokens: warm-black surfaces, hard 2px corners, a white primary action; colour is spent on state and on the seal
+   accent only. Components use the semantic utilities below, never raw colours. */
+@import "tailwindcss";
+
+:root {
+  --surface: #0b0908;
+  --surface-sunken: #060504;
+  --surface-card: #12100e;
+  --surface-raised: #1a1715;
+  --surface-hover: #1e1a17;
+  --ink: #f2f0ed;
+  --ink-muted: #bab4ad;
+  --ink-subtle: #958e87;
+  --rule: #ffffff21;
+  --rule-strong: #ffffff38;
+  --seal: #4fd1b8;
+  --seal-bg: #1c4a4299;
+  --ok: #7bd88a;
+  --ok-bg: #1f4a2799;
+  --warn: #f5c75e;
+  --warn-bg: #3a2a0899;
+  --danger: #ff8d84;
+  --danger-bg: #4a1c1999;
+  --pending: #82c6ff;
+  --pending-bg: #14304c99;
+  --card-shadow: inset 0 1px 0 #ffffff0d, 0 1px 2px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-surface: var(--surface);
+  --color-sunken: var(--surface-sunken);
+  --color-card: var(--surface-card);
+  --color-raised: var(--surface-raised);
+  --color-hover: var(--surface-hover);
+  --color-ink: var(--ink);
+  --color-muted: var(--ink-muted);
+  --color-subtle: var(--ink-subtle);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-seal: var(--seal);
+  --color-seal-bg: var(--seal-bg);
+  --color-ok: var(--ok);
+  --color-ok-bg: var(--ok-bg);
+  --color-warn: var(--warn);
+  --color-warn-bg: var(--warn-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-pending: var(--pending);
+  --color-pending-bg: var(--pending-bg);
+  --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --radius-sm: 2px;
+}
+
+html, body { background: var(--surface); color: var(--ink); }
+body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+:focus-visible { outline: 2px solid var(--seal); outline-offset: 2px; }
+a { text-underline-offset: 3px; }
