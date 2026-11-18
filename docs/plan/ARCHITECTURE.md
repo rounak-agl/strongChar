@@ -105,13 +105,13 @@ Every EVM transaction needs an open window, because every actor has a registered
 
 | Actor | allowedTargets | Max value | Max txs | Blocks |
 |---|---|---|---|---|
-| Data owner / host / entrant (browser) | BeruToken, JobMarket, Competitions | 0 native (BERU moves by ERC-20 calls) | 10 | about 1 hour |
-| Coordinator | JobMarket, Competitions | 0 | per round | rolling |
-| Verifiers | JobMarket, Competitions | 0 | per round | rolling |
-| Nodes | BeruToken, NodeRegistry, JobMarket | 0 | per round | rolling |
+| Data owner / host / entrant (browser) | BeruToken, JobMarket, Competitions | sized from measured gas (fees count) | 10 | about 1 hour (≈2,500 blocks) |
+| Coordinator | JobMarket, Competitions | sized from measured gas | per round | rolling |
+| Verifiers | JobMarket, Competitions | sized from measured gas | per round | rolling |
+| Nodes | BeruToken, NodeRegistry, JobMarket | sized from measured gas | per round | rolling |
 
 Rules:
-- Native value caps are in `aqor` (18 decimals, the EVM's unit), not `uqor` (6 decimals, the bank's unit). Every window above caps native value at 0 because all payments are in BERU.
+- `max_value` is in `uqor` and is consumed by each admitted tx's value **plus gas limit × max fee** (spike S1). Caps are sized per role from measured gas with headroom; no role transfers native value. Opening a window advances the account sequence (= EVM nonce), so open first, then read the nonce.
 - Before each EVM transaction the sender checks its window (`fetchEvmWindow`). If fewer than 20 blocks or 2 txs remain, it renews first. A test lets a window lapse mid-round and checks the round still completes.
 - Windows are closed when an actor goes idle. A stolen classical key alone can open nothing (hybrid signing is required) and can only spend inside an open window's targets.
 - Fallback if windows prove unworkable for services: agent keys with spending rules (`MsgExecuteEVM`, no window, re-link every 30 days).
@@ -243,7 +243,7 @@ Sandbox (what "honest script" means):
 - Input mounted read-only at `/data`: `train.csv` (public), `test_features.csv` (decrypted by the verifier, never the labels). Each run gets only its own script and a fresh `/tmp`.
 - Output: `/out/predictions.csv`, parsed with a strict CSV reader (no eval), exactly one row per test item, correct type and class range.
 - Rejection reasons shown to the entrant: `Timeout`, `Crash`, `OOM`, `BadOutputShape`, `BadOutputRange`, `OutputTooLarge`, `NondeterministicOutput` (hashes differ between verifiers), `ImageMismatch`.
-- Image pinned by digest; the digest and the CPU architecture (arm64) are part of the competition record so anyone can rerun on the same architecture **[verify Q14]**.
+- Image pinned by digest (`sandbox/Dockerfile`); the digest is part of the competition record. Predictions are canonicalised before hashing and scoring (labels; values rounded to 6 decimals; fixed CSV format), because raw floats differ across CPU architectures while canonical forms match (spike S5). Anyone can rerun on arm64 or x86.
 - Known limit: an entrant learns one bit per entry (valid or not), which a script could tie to hidden test features. The per-entrant entry cap bounds it; THREAT_MODEL.md documents it.
 
 Metrics: accuracy, macro-F1, RMSE, ROC-AUC, all in `strongchar_compete.metrics`, with fixed-order float64 sums so both verifiers get identical numbers. Scores go on-chain as integers (×1e6). Cut line: accuracy and RMSE only.

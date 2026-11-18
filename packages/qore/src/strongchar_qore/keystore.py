@@ -5,9 +5,11 @@ from __future__ import annotations
 import json
 import os
 import stat
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from functools import cached_property
 from pathlib import Path
 
+from qoreseal import SealKeyPair, derive_seal_keys
 from qorsdk import generate_mnemonic
 from qorsdk.unified import UnifiedAccount, derive_unified_account
 
@@ -31,7 +33,18 @@ DEFAULT_PATH = Path(os.environ.get("STRONGCHAR_KEYSTORE", Path.home() / ".config
 @dataclass(frozen=True)
 class Actor:
     name: str
-    account: UnifiedAccount
+    # UnifiedAccount's own repr prints the private key, so never let it reach a log.
+    account: UnifiedAccount = field(repr=False)
+    # Kept so seal keys can be derived; repr=False keeps it out of logs and tracebacks.
+    _mnemonic: str = field(repr=False, default="")
+
+    @cached_property
+    def seal(self) -> SealKeyPair:
+        """ML-KEM-1024 + X25519 seal keys, derived from the same mnemonic (index 0)."""
+        return derive_seal_keys(self._mnemonic)
+
+    def __repr__(self) -> str:
+        return f"Actor({self.name}, {self.qor}, {self.evm})"
 
     @property
     def qor(self) -> str:
@@ -66,10 +79,10 @@ def load(name: str, path: Path = DEFAULT_PATH) -> Actor:
     mnemonics = json.loads(path.read_text())["actors"]
     if name not in mnemonics:
         raise KeyError(f"unknown actor {name!r}")
-    return Actor(name, derive_unified_account(mnemonics[name]))
+    return Actor(name, derive_unified_account(mnemonics[name]), mnemonics[name])
 
 
 def load_all(path: Path = DEFAULT_PATH) -> list[Actor]:
     _check_private(path)
     mnemonics = json.loads(path.read_text())["actors"]
-    return [Actor(n, derive_unified_account(m)) for n, m in mnemonics.items()]
+    return [Actor(n, derive_unified_account(m), m) for n, m in mnemonics.items()]

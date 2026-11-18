@@ -30,18 +30,18 @@ Done on 18 Nov
 Tasks
 - [x] P0.1 Empty uv and pnpm workspaces matching ARCHITECTURE section 2; Foundry installed; CI skeleton (pytest, forge test, web typecheck).
 - [x] P0.3 (18 Nov: 11 keys; deployer funded with 40 QOR by Rounak; 2.5 QOR sent to each actor) Generate mnemonics for the deployer and the 9 service accounts (printed once for Rounak's offline backup, stored locally outside the repo, never committed). Rounak sends about 40 QOR and 200 fUSD from QoreX to the deployer; the deployer funds the rest.
-- [ ] P0.4 Register ML-DSA-87 keys with proof of possession for every actor (done 18 Nov, all 11 proven), then KEM keys.
-- [ ] P0.5 Ship Weeks badges from listed addresses: first hybrid tx, first native AMM swap (pool 2 is fine), first QoreSeal key, first contract containing a PQC precompile address.
+- [x] P0.4 Register ML-DSA-87 keys with proof of possession for every actor, then KEM keys (both done 18 Nov for all 11).
+- [x] P0.5 (all four earned 18 Nov) Ship Weeks badges from listed addresses: first hybrid tx, first native AMM swap (pool 2 is fine), first QoreSeal key, first contract containing a PQC precompile address.
 - [x] P0.6 AWS (18 Nov): three `t4g.small` arm64 Ubuntu 24.04 VMs (edge with Elastic IP and ports 80/443; verifiers and nodes with no inbound), 20 GB encrypted gp3, IMDSv2 hop 1, termination protection, Session Manager only, Docker + log rotation + 2 GB swap, gVisor on verifiers, CloudWatch auto-recovery. Budget alerts pending an email address from Rounak.
 - [x] P0.7 `AI_USAGE.md` started as a running log; README credits section started.
-- [ ] P0.8 Add the 5 listed addresses (MEMORY D32) to the project page.
+- [x] P0.8 (18 Nov) Add the 5 listed addresses (MEMORY D32) to the project page.
 
 Spikes (each writes its answer into MEMORY.md)
-- [ ] S1 **Windows:** open a scoped window, send an EVM tx inside it, let it lapse, confirm the tx is refused, renew. Measure how many blocks an hour is.
+- [x] S1 **Windows:** open a scoped window, send an EVM tx inside it, let it lapse, confirm the tx is refused, renew. Measure how many blocks an hour is.
 - [x] S2 **pqcVerify format (Q1):** sign a message with ML-DSA-87 in Python and call `pqcVerify` through `eth_call` (free) with raw bytes, a keccak digest and with any context string, until one returns true. Then one real tx to measure gas.
-- [ ] S3 **QoreSeal (Q5, Q16):** Python seal → TS open and TS seal → Python open, multi-recipient, with AAD; register a KEM key; check recipient cards against the ML-DSA key; find out whether QoreX can hold a KEM key and open envelopes for a dApp.
-- [ ] S4 **BERU in the AMM (Q3):** deploy a test ERC-20 and check whether it appears as an `erc20:0x…` bank coin and can seed a pool. If not, use pool 2 per PRD T2.
-- [ ] S5 **Sandbox determinism (Q14):** run one sklearn script twice on the worker VM (arm64) and on the laptop (x86); hashes must match within each machine. Record whether they match across.
+- [~] S3 **QoreSeal (Q5, Q16):** (Python side done 18 Nov; TS round trip and Q16 pending) Python seal → TS open and TS seal → Python open, multi-recipient, with AAD; register a KEM key; check recipient cards against the ML-DSA key; find out whether QoreX can hold a KEM key and open envelopes for a dApp.
+- [x] S4 **BERU in the AMM (Q3):** (no: not registrable, pools cost 100 QOR) deploy a test ERC-20 and check whether it appears as an `erc20:0x…` bank coin and can seed a pool. If not, use pool 2 per PRD T2.
+- [x] S5 **Sandbox determinism (Q14):** (18 Nov: canonicalise outputs, D40) run one sklearn script twice on the worker VM (arm64) and on the laptop (x86); hashes must match within each machine. Record whether they match across.
 
 Exit check: all five spikes answered; every actor has a possession-proven ML-DSA key and a registered KEM key; both VMs reachable; four Ship Weeks badges green.
 

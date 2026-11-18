@@ -14,6 +14,10 @@ The project's running log. Update at the end of every working session. Newest lo
 - An EVM transaction from an account with a registered ML-DSA key needs an open EVM window (event FAQ). Agent keys with spending rules (`MsgExecuteEVM`) need no window.
 - Precompiles: `pqcVerify(bytes pubkey, bytes sig, bytes msg) returns (bool)` at `0x…0a01`, 25,000 + 8 gas/byte (≈85–90k typical). `pqcKeyStatus(address) returns (bool registered, uint8 algorithmId, bytes pubkey, bool possessionProven)` at `0x…0a02`, 2,500 gas, algorithmId 1 = ML-DSA-87. Write addresses in lowercase in Solidity. Inactive precompiles return empty data, so typed calls revert.
 - Sizes: ML-DSA-87 public key 2,592 bytes, signature 4,627 bytes.
+- EVM windows (S1, 18 Nov): no window → EVM tx refused with "has no open EVM authorisation window"; inside a window deploys and calls work; closing takes effect at once; scoped targets refuse other recipients ("the window does not list 0x…"). Each admitted tx consumes value + gas limit × max fee from `max_value` (deploy with 600k limit at 200 gwei = 120,000 uqor). Opening a window advances the account sequence (= EVM nonce). Block time ≈ 1.43 s, so 17,280 blocks ≈ 6.8 h. Base fee 100 gwei.
+- Native AMM (S4, 18 Nov): params `pool_creation_fee` 100 QOR, swap fee 30 bps + protocol 10 bps, max price impact 500 bps. ERC-20 module: `permissionless_registration: false`, so a new ERC-20 can't become a bank coin without governance. Pool 2 (fUSD/QOR) trades at about 14.6 QOR per fUSD.
+- QoreSeal (S3, 18 Nov): REST route for KEM keys is `/qorechain/pqc/v1/kem/{address}`. A 100 KB plaintext sealed to 3 hybrid recipients grows by about 5 KB. Failures: `NOT_A_RECIPIENT`, `DECRYPTION_FAILED` (wrong AAD or purpose), `CARD_INVALID`.
+- PQProbe contract (spike, testnet): `0x50C3540e93D4D14FCCe90518C3D49B132E6cF43B`, deploy tx `0x7d26e4d873e73d72a552809f492c817cbaf939f13cfdb3d6a33f8f6c988e241c`.
 - `pqcVerify` (S2, 18 Nov): verifies plain ML-DSA-87 over the exact `msg` bytes (no hashing, empty context). A direct call with a 160-byte message estimates 313,660 gas including calldata (≈0.035 QOR at 112.5 gwei).
 - PQ key status: a key registered through QoreX shows `registered = true` but `possessionProven = false`. Proof of possession needs `MsgRegisterPQCKeyV2` with a proof (SDK `sign_proof_of_possession`). Our contracts require it only of nodes and verifiers.
 - `qorechain-pqc` depends on `liboqs-python`, which downloads and compiles liboqs from GitHub on first import unless liboqs is already installed. Docker images must build liboqs at image build time.
@@ -52,7 +56,7 @@ The project's running log. Update at the end of every working session. Newest lo
 | D21 | 18 Nov | Three `t4g.small` VMs (arm64, 2 GB + 2 GB swap) in ap-southeast-2: edge (coordinator + Caddy, no decryption keys, ports 80/443, Elastic IP 32.237.26.58), verifiers (both verifiers + gVisor sandbox runner, no inbound) and nodes (4 nodes, no inbound). About $59 to 16 Dec | Red-team split of keys from the public box; the AWS Free plan refuses `t4g.medium`, so the worker became two smalls, which also separates verifiers from nodes |
 | D22 | 18 Nov | Tagline: "Your data, sealed to only the machines that need it. Every step proven." | Red-team: "no one can read" was false (nodes and verifiers read what they work on) |
 | D23 | 18 Nov | Cut order if behind: (1) competitions shrink to a scripted CLI demo with a read-only page and accuracy/RMSE only; (2) benchmark ranking → plain eligibility; (3) BERU AMM pool → pool-2 swap for the badge; (4) in-UI window controls → auto-opened windows; (5) side entry → read-only checker. Never cut: sealed job end to end, browser seal/open, PQ-verified verdicts and settlement, slashing | Your choice: protect sealed training and web polish |
-| D24 | 18 Nov | EVM windows are mandatory; every sender checks and renews its window before each EVM tx; native value caps 0 (`aqor` units) | FAQ confirms windows are required once an ML-DSA key is registered |
+| D24 | 18 Nov | EVM windows are mandatory; every sender checks and renews its window before each EVM tx. A window's `max_value` (in `uqor`) is consumed by each admitted tx's value **plus gas limit × max fee**, so caps are sized per role from measured gas, never 0. Scoped `allowed_targets` work as expected | Event FAQ + spike S1 (corrected 18 Nov: an earlier draft said caps of 0) |
 | D25 | 18 Nov | Never use `prevrandao`; round seed = blockhash of the first block after the commit deadline | `prevrandao` is always 0 on diana |
 | D26 | 18 Nov | Verifier pair immutable at deploy; `finalizeRound` and score posting callable by anyone with both valid signatures | Removes the coordinator as a trust point; no admin backdoor |
 | D27 | 18 Nov | No stuck money: stalled-job refund, no-valid-entry refund, verifiers may reveal labels after the reveal deadline, honest stake always withdrawable | Red-team: several paths could lock funds |
@@ -65,6 +69,9 @@ The project's running log. Update at the end of every working session. Newest lo
 | D34 | 18 Nov | Verifiers pinned to arm64; competition records state image digest and architecture | Floating-point results likely differ across architectures (Q14) |
 | D35 | 18 Nov | Contracts pass `pqcVerify` the exact `abi.encode(...)` message bytes; verifiers sign those same bytes with `qorsdk.pqc.pqc_sign` (deterministic) | Spike S2 |
 | D36 | 18 Nov | Actor keys are unified eth-native accounts (`qorsdk.unified`, coin type 60): one key gives the `qor1…` and `0x…` forms plus a seeded ML-DSA-87 key, matching QoreX. Stored in `~/.config/strongchar/accounts.json` (mode 600), outside the repo | Same derivation as the wallet adapter |
+| D38 | 18 Nov | Seal keys (ML-KEM-1024 + X25519) are derived from each actor's mnemonic (`qoreseal.derive_seal_keys`, index 0) and registered on-chain; every sender verifies a recipient card before sealing; envelopes use hybrid mode with AAD `chain\|contract\|job\|round\|shard\|kind` and a purpose string per object kind | Spike S3 |
+| D39 | 18 Nov | Contracts keep precompile addresses as `immutable` values so the full 20-byte addresses appear in deployed code | The optimizer otherwise shrinks them to 2 bytes; the Ship Weeks check looks for the address in code |
+| D40 | 18 Nov | Verifiers canonicalise every prediction file before hashing, validity and scoring: classification → integer labels (probabilities, where a metric needs them, rounded to 6 decimals), regression → values rounded to 6 decimals, fixed CSV formatting. Validity compares canonical hashes; scores are computed from canonical predictions, so anyone can rerun on any architecture | Spike S5: raw floats differ across arm64/x86, canonical forms match |
 
 ## 3. Open questions
 
@@ -72,9 +79,9 @@ The project's running log. Update at the end of every working session. Newest lo
 |---|---|---|---|
 | Q1 | Does `pqcVerify` take raw bytes, a digest, or apply a context string? | Spike S2: plain FIPS-204 over the exact `msg` bytes, empty context, no hashing. Tampered or over-long signatures rejected | Closed (D35) |
 | Q2 | Can an account with a registered PQ key send EVM txs without a window? | Event FAQ: no | Closed (D24) |
-| Q3 | Does our own ERC-20 (BERU) become an `erc20:0x…` bank coin that a native AMM pool can hold? (Pools with `erc20:` coins already exist) | Spike S4 | Open, narrowed |
+| Q3 | Does our own ERC-20 (BERU) become an `erc20:0x…` bank coin that a native AMM pool can hold? | Spike S4: no. `permissionless_registration` is false (needs governance), and creating a pool costs 100 QOR | Closed (D37 pending Rounak's choice) |
 | Q4 | Cancun opcodes and randomness on chain 9800? | Chain config: Prague active; `prevrandao` = 0 | Closed (D25) |
-| Q5 | How exactly is a KEM key bound to the ML-DSA identity (recipient cards)? | Spike S3, workshop 20 Nov | Open |
+| Q5 | How exactly is a KEM key bound to the ML-DSA identity (recipient cards)? | Spike S3: the account registers its ML-KEM key with a hybrid-signed `MsgRegisterKEMKey` and signs a recipient card (chain, address, ML-KEM + X25519 keys) with both its secp256k1 and ML-DSA-87 keys; senders run `verify_recipient_card` against the on-chain keys | Closed (D38) |
 | Q6 | How is student status verified for Quantum Campus? | Rules: jury emails each member for proof of enrolment | Closed |
 | Q7 | Which VM for the backend? | D15, D21 | Closed |
 | Q8 | Side entry in a separate repo? | D16 | Closed |
@@ -83,7 +90,7 @@ The project's running log. Update at the end of every working session. Newest lo
 | Q11 | Visual direction | D18 | Closed |
 | Q12 | Second-half challenges and any rule or prize changes | Workshop 20 Nov; re-read /rules on 20 and 27 Nov | Open |
 | Q13 | Backend VM available? | D15 | Closed |
-| Q14 | Do sandbox predictions match across arm64 and x86? | Spike S5 | Open (verifiers pinned to arm64 either way, D34) |
+| Q14 | Do sandbox predictions match across arm64 and x86? | Spike S5: same arch always identical; across arch raw float bits differ for BLAS-based models (logreg, MLP, ridge) but canonicalised outputs (labels; values rounded to 6 decimals) match for all four models tried | Closed (D40) |
 | Q15 | Benchmark threshold: how slow is too slow? | Measure in Phase 2 on the worker VM and the laptop | Open |
 | Q16 | Does QoreX hold QoreSeal (ML-KEM) keys and open envelopes for a dApp? | Spike S3, `@qorechain/qoreseal` docs, workshop 20 Nov | Open (fallback in ARCHITECTURE section 4) |
 | Q17 | Does the registration "level" (set to Quantum Pass) limit the categories a person can win in? | Ask in Discord #builders | Open, Rounak |
@@ -98,7 +105,12 @@ The project's running log. Update at the end of every working session. Newest lo
 - AI_USAGE.md started; README credits started.
 - Deployer funded (40 QOR from Rounak's QoreX). PoP-registered the deployer's ML-DSA key (tx D746BD18…, 0.063 QOR), sent 2.5 QOR to each of the other 10 actors with hybrid-signed txs, PoP-registered all 10. All 11 show `possession_proven: true`. Chain wrapper `strongchar_qore.chain` (simulate → sign → broadcast → confirm).
 - AWS: the Free plan refuses `t4g.medium`; D21 changed to three `t4g.small` VMs. Launched and bootstrapped (Docker, swap, log rotation, gVisor on verifiers, verified). Edge IP 32.237.26.58 → API host 32-237-26-58.sslip.io.
-- Next: windows (S1), QoreSeal and KEM keys (S3), BERU (S4), pool-2 swap and PQC-contract badges; budget alerts once Rounak gives an email.
+- S1 done: windows behave as documented; D24 corrected (caps must cover fees, in uqor). PQProbe deployed with full precompile addresses in its code (D39).
+- S3 done (Python): KEM keys registered for all 11 actors, recipient cards verified against the chain, forged card rejected, 3-recipient seal/open with AAD; Q5 closed (D38). TS round trip and Q16 still open.
+- S4 done: Q3 closed, BERU can't join a native pool (no permissionless registration; pools cost 100 QOR). Swapped 2 QOR → 0.136 fUSD in pool 2 from the deployer (tx 1E6730B2…). BERU's role awaits Rounak's choice (D37).
+- Project page now lists the 5 addresses (D32). Platform verifies 6 features on-chain (AMM pools, EVM window incl. scoped, hybrid ML-DSA-87 txs, PQC key registration with PoP, QoreSeal key registry, test tokens), 4 of 10 SDKs, 3 of 3 commits. All four Ship Weeks badges earned.
+- S5 done: pinned sandbox image (python:3.12-slim by index digest; numpy 2.5.5, scipy 1.18.1, pandas 3.1.1, scikit-learn 1.9.1) run twice on x86 (laptop, runc) and twice on arm64 (verifiers VM, gVisor). Within each arch identical; across arch only canonicalised outputs match (D40).
+- Next: Rounak's choice on BERU (D37); budget alerts once Rounak gives an email; then Phase 1.
 
 ### 2026-11-18
 - Researched the event, past winners and similar projects. Category and scope decided (D1–D13).
