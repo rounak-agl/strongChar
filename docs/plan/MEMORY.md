@@ -121,6 +121,12 @@ The project's running log. Update at the end of every working session. Newest lo
 - Finding: Foundry fork tests can't exercise QoreChain's precompiles (forks run in Foundry's own EVM, where 0x…0a01/0a02 have no code), so the real pqcVerify check runs against diana with eth_call after deploy.
 - Next: P1.5 deploy (needs Rounak's go-ahead), P1.6 CI.
 
+### 2026-11-19
+- Rule: no Claude attribution in any commit or PR (local commit-msg hook + saved rule); past history left as is by Rounak's choice. PR #7 merged with a clean squash message.
+- P1.5 deployed to diana (deploy block 10,338,199): JobMarket 0xa5FA…2EaDa, NodeRegistry 0x0811…73f1, BeruToken 0x6Cd5…6D34, BeruFaucet 0xCF74…3b67; wiring verified on-chain; real verifier-a/b ML-DSA-87 signatures verify through the deployed JobMarket (211,870 gas per check), a tampered one is rejected. Cost 1.28 QOR.
+- Finding: diana bills at least 50% of an EVM tx's gas limit (every deploy with a 6M limit used exactly 3M). Always size gas limits from eth_estimateGas × ~1.2.
+- Next: P1.6 CI for the new packages, then Phase 2.
+
 ### 2026-11-18
 - Researched the event, past winners and similar projects. Category and scope decided (D1–D13).
 - Checked QoreChain packages: Python SDK, QoreSign and QoreSeal all on PyPI; npm packages all published.
