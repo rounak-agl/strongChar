@@ -1,0 +1,191 @@
+{
+ "version": 1,
+ "chainId": 9800,
+ "jobMarket": "0xd7ce5b06ad76c8f635310fe87074d22ac21ec2c8",
+ "domain": "0x3e588449fc6a59eede37631dcc324c6a67f8bf7516aefe41d16d83495fa77806",
+ "commitHash": [
+  {
+   "jobId": 7,
+   "roundId": 3,
+   "node": "0xf7a5a997ed54c8ed6da76d8bf827abcc2e308937",
+   "root": "0x4c3ef751a25375a32690c63ea93eeaeeb78e5c580d21156177dac88d12706493",
+   "salt": "0xa05e334153147e75f3f416139b5109d1179cb56fef6a4ecb4c4cbc92a7c37b70",
+   "hash": "0xabfa02d6b7c0fe24eeb7c945483b02a851ebd34240e9d24fee15cf757f92aa1e"
+  },
+  {
+   "jobId": 0,
+   "roundId": 0,
+   "node": "0x0000000000000000000000000000000000000000",
+   "root": "0x0000000000000000000000000000000000000000000000000000000000000000",
+   "salt": "0x0000000000000000000000000000000000000000000000000000000000000000",
+   "hash": "0x1a699887229e77a99a0c6cbdffec41325252e669d87e606c016421dd177e0d66"
+  }
+ ],
+ "roundSeed": [
+  {
+   "blockhash": "0x20b53acf0daefc8c6ad68c861fb3b543ca541abd101abc1edfcbf6606b838ef4",
+   "jobId": 7,
+   "roundId": 3,
+   "seed": "0x509299a28d54131b4883fba274a95b8f2f2cc7d85f572f0aff719945c05ee27b"
+  }
+ ],
+ "permutation": [
+  {
+   "seed": "0xc7df27a2eb25e53f3cc370b3262cab8c3e803549f24efcfc1a68ae1f83029829",
+   "n": 1,
+   "perm": [
+    0
+   ]
+  },
+  {
+   "seed": "0xc7df27a2eb25e53f3cc370b3262cab8c3e803549f24efcfc1a68ae1f83029829",
+   "n": 2,
+   "perm": [
+    1,
+    0
+   ]
+  },
+  {
+   "seed": "0xc7df27a2eb25e53f3cc370b3262cab8c3e803549f24efcfc1a68ae1f83029829",
+   "n": 10,
+   "perm": [
+    6,
+    4,
+    8,
+    2,
+    0,
+    1,
+    3,
+    7,
+    9,
+    5
+   ]
+  }
+ ],
+ "batch": [
+  {
+   "jobId": 7,
+   "shard": 0,
+   "start": 100,
+   "len": 10,
+   "steps": 3,
+   "batchSize": 4,
+   "roundsDone": 0,
+   "batches": [
+    [
+     106,
+     104,
+     108,
+     102
+    ],
+    [
+     100,
+     101,
+     103,
+     107
+    ],
+    [
+     109,
+     105,
+     100,
+     106
+    ]
+   ]
+  },
+  {
+   "jobId": 7,
+   "shard": 0,
+   "start": 100,
+   "len": 10,
+   "steps": 3,
+   "batchSize": 4,
+   "roundsDone": 1,
+   "batches": [
+    [
+     105,
+     108,
+     102,
+     109
+    ],
+    [
+     103,
+     104,
+     107,
+     101
+    ],
+    [
+     106,
+     108,
+     105,
+     103
+    ]
+   ]
+  }
+ ],
+ "shardTableHash": [
+  {
+   "shards": [
+    [
+     0,
+     6000
+    ],
+    [
+     6000,
+     6000
+    ]
+   ],
+   "hash": "0xc31e1619417fdc4ba52a6c3f9d58c1160e3fc80c6ee5738eb278a1d737456fc7"
+  }
+ ],
+ "payoutsHash": [
+  {
+   "payouts": [
+    [
+     "0x943bc276822c3e5459d6ea9df782ca3eddf736a9",
+     1499999
+    ],
+    [
+     "0xf7a5a997ed54c8ed6da76d8bf827abcc2e308937",
+     1500001
+    ]
+   ],
+   "hash": "0x2610528a518f6adf87b3dec3bc8afd730f7df5cce2bf396eb08bfd37658c58b4"
+  },
+  {
+   "payouts": [],
+   "hash": "0x569e75fc77c1a856f6daaf9e69d8a9566ca34aa47f9133711ce065a571af0cfd"
+  }
+ ],
+ "settlement": {
+  "jobId": 7,
+  "roundId": 3,
+  "outcome": 0,
+  "aggregateHash": "0x48990417e807a8a37a6c1879eea0106d844cf814975d8f86996c960c49b4922c",
+  "slashedBitmap": 8,
+  "aggEvidenceHash": "0x6600e56f40b0d61e807684f158f82a54f6111fa925a97f81e02d2de129f28629",
+  "payEvidenceHash": "0x101268f9dd4ebae9194f2c11ffa8a531f55a7bf87e270f1b3349c2b7be5640e5",
+  "payouts": [
+   [
+    "0x943bc276822c3e5459d6ea9df782ca3eddf736a9",
+    1499999
+   ],
+   [
+    "0xf7a5a997ed54c8ed6da76d8bf827abcc2e308937",
+    1500001
+   ]
+  ],
+  "payloadHash": "0x99536cb4ac16d6ec936a7a676b94ae3cc9ef77921443709a3ae78ee5b6fc532d"
+ },
+ "pqMessage": {
+  "domainTag": "0x0ac1aabc84f8921a2c9c39c56d41fbf82f7b6dcb4bab4dfaa98d8873df5c2361",
+  "kind": 1,
+  "payloadHash": "0x99536cb4ac16d6ec936a7a676b94ae3cc9ef77921443709a3ae78ee5b6fc532d",
+  "expiryBlock": 12345678,
+  "message": "0x0ac1aabc84f8921a2c9c39c56d41fbf82f7b6dcb4bab4dfaa98d8873df5c23610000000000000000000000000000000000000000000000000000000000002648000000000000000000000000d7ce5b06ad76c8f635310fe87074d22ac21ec2c8000000000000000000000000000000000000000000000000000000000000000199536cb4ac16d6ec936a7a676b94ae3cc9ef77921443709a3ae78ee5b6fc532d0000000000000000000000000000000000000000000000000000000000bc614e"
+ },
+ "weights": {
+  "specHash": "0x428cc53e67caab418563ebe393ca4b57e3f7070a40ae22ff9e4d9bd1b236bc24",
+  "weights": "6cbf003e7f4607bebdf2233fdfd5d63da12109bffd22b93e79e9a63fe673723ffe2734bf55f9a1bfea8e1fbf6e45293d4ecd14c0ec0a60be037a9fbfe0753bbf",
+  "hash": "0x569c68286c799c33bae17b10a0bf50ccf36be6216c750e461a91efdf3369bcf3"
+ }
+}

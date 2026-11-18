@@ -112,7 +112,9 @@ The project's running log. Update at the end of every working session. Newest lo
 - Project page now lists the 5 addresses (D32). Platform verifies 6 features on-chain (AMM pools, EVM window incl. scoped, hybrid ML-DSA-87 txs, PQC key registration with PoP, QoreSeal key registry, test tokens), 4 of 10 SDKs, 3 of 3 commits. All four Ship Weeks badges earned.
 - S5 done: pinned sandbox image (python:3.12-slim by index digest; numpy 2.5.5, scipy 1.18.1, pandas 3.1.1, scikit-learn 1.9.1) run twice on x86 (laptop, runc) and twice on arm64 (verifiers VM, gVisor). Within each arch identical; across arch only canonicalised outputs match (D40).
 - D37 decided: budgets and prizes in fUSD, funded via a QOR → fUSD swap in native pool 2 when needed; BERU for stakes and slashing. AWS budget `strongchar-credits` created ($100, usage before credits, email alerts at 70% and 85%). PR #3 merged.
-- Next: Phase 1 (core packages, contracts, deploy).
+- Phase 1 started. P1.1 done: `strongchar_core` (keccak, weight blobs, exact judge, median-clip trimmed-mean merge and gate, equal fUSD payout, canonical evidence, finalize with slashing, PQ message encoding, cross-language vectors), `strongchar_workloads` (fixed-order kernel, exact MLP, round runner, op counts), `strongchar_datasets` (canonicaliser, split with an owner holdout, shard files). Merge, gate, shuffle, kernel and MLP steps match the earlier deterministic maths bit for bit on random inputs. The MLP self-test hash is identical on x86 and on arm64 under gVisor (389ba66f…). P1.2 done: seeded synthetic health table, 20,000 rows, 20% positives. 33 tests green (+1 live MNIST test).
+- Note: the health table has raw-scale features; the job flow must standardise them (fixed-order stats from the train split) before training.
+- Next: P1.3 (qore wrapper: seal/open, PQ signing), P1.4 contracts.
 
 ### 2026-11-18
 - Researched the event, past winners and similar projects. Category and scope decided (D1–D13).
