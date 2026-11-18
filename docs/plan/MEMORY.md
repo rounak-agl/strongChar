@@ -71,6 +71,7 @@ The project's running log. Update at the end of every working session. Newest lo
 | D36 | 18 Nov | Actor keys are unified eth-native accounts (`qorsdk.unified`, coin type 60): one key gives the `qor1…` and `0x…` forms plus a seeded ML-DSA-87 key, matching QoreX. Stored in `~/.config/strongchar/accounts.json` (mode 600), outside the repo | Same derivation as the wallet adapter |
 | D38 | 18 Nov | Seal keys (ML-KEM-1024 + X25519) are derived from each actor's mnemonic (`qoreseal.derive_seal_keys`, index 0) and registered on-chain; every sender verifies a recipient card before sealing; envelopes use hybrid mode with AAD `chain\|contract\|job\|round\|shard\|kind` and a purpose string per object kind | Spike S3 |
 | D39 | 18 Nov | Contracts keep precompile addresses as `immutable` values so the full 20-byte addresses appear in deployed code | The optimizer otherwise shrinks them to 2 bytes; the Ship Weeks check looks for the address in code |
+| D40 | 18 Nov | Verifiers canonicalise every prediction file before hashing, validity and scoring: classification → integer labels (probabilities, where a metric needs them, rounded to 6 decimals), regression → values rounded to 6 decimals, fixed CSV formatting. Validity compares canonical hashes; scores are computed from canonical predictions, so anyone can rerun on any architecture | Spike S5: raw floats differ across arm64/x86, canonical forms match |
 
 ## 3. Open questions
 
@@ -89,7 +90,7 @@ The project's running log. Update at the end of every working session. Newest lo
 | Q11 | Visual direction | D18 | Closed |
 | Q12 | Second-half challenges and any rule or prize changes | Workshop 20 Nov; re-read /rules on 20 and 27 Nov | Open |
 | Q13 | Backend VM available? | D15 | Closed |
-| Q14 | Do sandbox predictions match across arm64 and x86? | Spike S5 | Open (verifiers pinned to arm64 either way, D34) |
+| Q14 | Do sandbox predictions match across arm64 and x86? | Spike S5: same arch always identical; across arch raw float bits differ for BLAS-based models (logreg, MLP, ridge) but canonicalised outputs (labels; values rounded to 6 decimals) match for all four models tried | Closed (D40) |
 | Q15 | Benchmark threshold: how slow is too slow? | Measure in Phase 2 on the worker VM and the laptop | Open |
 | Q16 | Does QoreX hold QoreSeal (ML-KEM) keys and open envelopes for a dApp? | Spike S3, `@qorechain/qoreseal` docs, workshop 20 Nov | Open (fallback in ARCHITECTURE section 4) |
 | Q17 | Does the registration "level" (set to Quantum Pass) limit the categories a person can win in? | Ask in Discord #builders | Open, Rounak |
@@ -108,7 +109,8 @@ The project's running log. Update at the end of every working session. Newest lo
 - S3 done (Python): KEM keys registered for all 11 actors, recipient cards verified against the chain, forged card rejected, 3-recipient seal/open with AAD; Q5 closed (D38). TS round trip and Q16 still open.
 - S4 done: Q3 closed, BERU can't join a native pool (no permissionless registration; pools cost 100 QOR). Swapped 2 QOR → 0.136 fUSD in pool 2 from the deployer (tx 1E6730B2…). BERU's role awaits Rounak's choice (D37).
 - Project page now lists the 5 addresses (D32). Platform verifies 6 features on-chain (AMM pools, EVM window incl. scoped, hybrid ML-DSA-87 txs, PQC key registration with PoP, QoreSeal key registry, test tokens), 4 of 10 SDKs, 3 of 3 commits. All four Ship Weeks badges earned.
-- Next: Rounak's choice on BERU; S5 sandbox determinism; budget alerts once Rounak gives an email.
+- S5 done: pinned sandbox image (python:3.12-slim by index digest; numpy 2.5.5, scipy 1.18.1, pandas 3.1.1, scikit-learn 1.9.1) run twice on x86 (laptop, runc) and twice on arm64 (verifiers VM, gVisor). Within each arch identical; across arch only canonicalised outputs match (D40).
+- Next: Rounak's choice on BERU (D37); budget alerts once Rounak gives an email; then Phase 1.
 
 ### 2026-11-18
 - Researched the event, past winners and similar projects. Category and scope decided (D1–D13).

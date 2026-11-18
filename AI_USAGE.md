@@ -22,6 +22,8 @@ strongChar is built by one person (Rounak) working with an AI coding agent (Clau
 | 18 Nov | Spike S2: found `pqcVerify`'s exact message format with live `eth_call`s and measured its gas | — |
 | 18 Nov | Chain wrapper (simulate, hybrid sign, broadcast, confirm); proof-of-possession key registration and funding for 11 actors | Funded the deployer from QoreX |
 | 18 Nov | Spikes S1, S3, S4 on testnet: windows, QoreSeal key registration and recipient cards, AMM limits; found and fixed a wrong window rule in the plan and a private-key leak in object printing | Chooses what BERU is for |
+| 18 Nov | Spike S5: pinned sandbox image, determinism runs on x86 and arm64 under gVisor; proposed canonicalising predictions | — |
+| 18 Nov | Listed the 5 project addresses and ran the Ship Weeks checks (all four badges earned) | — |
 | 18 Nov | AWS servers following AWS's EC2 launch guidance; found the Free plan refuses `t4g.medium` and proposed alternatives with prices; bootstrap script with gVisor | Approved spending, chose two small worker servers |
 
 ## Where AI was not trusted blindly

@@ -243,7 +243,7 @@ Sandbox (what "honest script" means):
 - Input mounted read-only at `/data`: `train.csv` (public), `test_features.csv` (decrypted by the verifier, never the labels). Each run gets only its own script and a fresh `/tmp`.
 - Output: `/out/predictions.csv`, parsed with a strict CSV reader (no eval), exactly one row per test item, correct type and class range.
 - Rejection reasons shown to the entrant: `Timeout`, `Crash`, `OOM`, `BadOutputShape`, `BadOutputRange`, `OutputTooLarge`, `NondeterministicOutput` (hashes differ between verifiers), `ImageMismatch`.
-- Image pinned by digest; the digest and the CPU architecture (arm64) are part of the competition record so anyone can rerun on the same architecture **[verify Q14]**.
+- Image pinned by digest (`sandbox/Dockerfile`); the digest is part of the competition record. Predictions are canonicalised before hashing and scoring (labels; values rounded to 6 decimals; fixed CSV format), because raw floats differ across CPU architectures while canonical forms match (spike S5). Anyone can rerun on arm64 or x86.
 - Known limit: an entrant learns one bit per entry (valid or not), which a script could tie to hidden test features. The per-entrant entry cap bounds it; THREAT_MODEL.md documents it.
 
 Metrics: accuracy, macro-F1, RMSE, ROC-AUC, all in `strongchar_compete.metrics`, with fixed-order float64 sums so both verifiers get identical numbers. Scores go on-chain as integers (×1e6). Cut line: accuracy and RMSE only.

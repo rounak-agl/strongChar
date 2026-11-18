@@ -41,7 +41,7 @@ Spikes (each writes its answer into MEMORY.md)
 - [x] S2 **pqcVerify format (Q1):** sign a message with ML-DSA-87 in Python and call `pqcVerify` through `eth_call` (free) with raw bytes, a keccak digest and with any context string, until one returns true. Then one real tx to measure gas.
 - [~] S3 **QoreSeal (Q5, Q16):** (Python side done 18 Nov; TS round trip and Q16 pending) Python seal → TS open and TS seal → Python open, multi-recipient, with AAD; register a KEM key; check recipient cards against the ML-DSA key; find out whether QoreX can hold a KEM key and open envelopes for a dApp.
 - [x] S4 **BERU in the AMM (Q3):** (no: not registrable, pools cost 100 QOR) deploy a test ERC-20 and check whether it appears as an `erc20:0x…` bank coin and can seed a pool. If not, use pool 2 per PRD T2.
-- [ ] S5 **Sandbox determinism (Q14):** run one sklearn script twice on the worker VM (arm64) and on the laptop (x86); hashes must match within each machine. Record whether they match across.
+- [x] S5 **Sandbox determinism (Q14):** (18 Nov: canonicalise outputs, D40) run one sklearn script twice on the worker VM (arm64) and on the laptop (x86); hashes must match within each machine. Record whether they match across.
 
 Exit check: all five spikes answered; every actor has a possession-proven ML-DSA key and a registered KEM key; both VMs reachable; four Ship Weeks badges green.
 
