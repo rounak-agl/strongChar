@@ -3,6 +3,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 mkdir -p run-logs
+# Laptop runs: plain runc (gVisor is installed on the verifiers server only).
+export STRONGCHAR_SANDBOX_RUNTIME="${STRONGCHAR_SANDBOX_RUNTIME:-runc}"
 export STRONGCHAR_COORDINATOR="${STRONGCHAR_COORDINATOR:-http://127.0.0.1:8700}"
 STRONGCHAR_DATA=./run-logs/coordinator-data uv run python -m strongchar_coordinator.main > run-logs/coordinator.log 2>&1 &
 echo $! > run-logs/pids

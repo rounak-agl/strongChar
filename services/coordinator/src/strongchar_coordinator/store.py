@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS signatures (job INTEGER, round INTEGER, verifier TEXT
 CREATE TABLE IF NOT EXISTS heartbeats (node TEXT PRIMARY KEY, body TEXT NOT NULL, seen REAL NOT NULL);
 CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS cards (address TEXT PRIMARY KEY, card TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS attestations (topic TEXT, author TEXT, body TEXT NOT NULL, PRIMARY KEY (topic, author));
+CREATE TABLE IF NOT EXISTS public_files (id TEXT PRIMARY KEY, name TEXT NOT NULL, size INTEGER NOT NULL, uploader TEXT NOT NULL);
 """
 
 
@@ -25,6 +27,7 @@ class Store:
     def __init__(self, root: Path):
         self.root = root
         (root / "blobs").mkdir(parents=True, exist_ok=True)
+        (root / "public").mkdir(parents=True, exist_ok=True)
         self.db = sqlite3.connect(root / "coordinator.db", check_same_thread=False, isolation_level=None)
         self.db.executescript(SCHEMA)
         self.lock = threading.Lock()
@@ -102,6 +105,21 @@ class Store:
     def get_card(self, address: str) -> str | None:
         rows = self._q("SELECT card FROM cards WHERE address = ?", (address.lower(),))
         return rows[0][0] if rows else None
+
+    def attest(self, topic: str, author: str, body: dict) -> None:
+        self._q("INSERT OR REPLACE INTO attestations VALUES (?,?,?)", (topic, author.lower(), json.dumps(body)))
+
+    def attestations(self, topic: str) -> list[dict]:
+        rows = self._q("SELECT author, body FROM attestations WHERE topic = ?", (topic,))
+        return [{"author": a, **json.loads(b)} for a, b in rows]
+
+    def put_public(self, file_id: str, name: str, data: bytes, uploader: str) -> None:
+        (self.root / "public" / file_id).write_bytes(data)
+        self._q("INSERT OR IGNORE INTO public_files VALUES (?,?,?,?)", (file_id, name, len(data), uploader))
+
+    def get_public(self, file_id: str) -> tuple[str, bytes] | None:
+        rows = self._q("SELECT name FROM public_files WHERE id = ?", (file_id,))
+        return (rows[0][0], (self.root / "public" / file_id).read_bytes()) if rows else None
 
     def kv_get(self, k: str, default: str | None = None) -> str | None:
         rows = self._q("SELECT v FROM kv WHERE k = ?", (k,))

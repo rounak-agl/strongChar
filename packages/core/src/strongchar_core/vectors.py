@@ -57,6 +57,13 @@ def build() -> dict:
     out["pqMessage"] = {"domainTag": hx(enc.PQ_DOMAIN_TAG), "kind": int(enc.PQKind.SETTLEMENT),
                         "payloadHash": hx(payload), "expiryBlock": 12_345_678,
                         "message": hx(enc.pq_message(9800, market, enc.PQKind.SETTLEMENT, payload, 12_345_678))}
+    out["competition"] = {
+        "validity": {"id": 3, "entry": 2, "ok": True, "predHash": hx(h("pred")),
+                     "payload": hx(enc.validity_payload(3, 2, True, h("pred")))},
+        "scores": {"id": 3, "entries": [0, 2], "scores": [700000, -120000],
+                   "payload": hx(enc.scores_payload(3, [0, 2], [700000, -120000]))},
+        "labels": {"labels": "0x000101", "salt": hx(h("salt")), "commit": hx(enc.label_commit(bytes([0, 1, 1]), h("salt")))},
+    }
     out["weights"] = {"specHash": hx(sh), "weights": w.astype("<f4").tobytes().hex(), "hash": hx(weights_hash(sh, w))}
     return out
 

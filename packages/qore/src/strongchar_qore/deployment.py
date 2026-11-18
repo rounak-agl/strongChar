@@ -22,13 +22,15 @@ class Deployment:
     coordinator: str
     verifier_a: str
     verifier_b: str
+    competitions: str = ""  # empty until Competitions is deployed
 
 
 def load(network: str = "diana") -> Deployment:
     d = tomllib.loads((ROOT / "networks" / f"{network}.toml").read_text())
     c, r = d["contracts"], d["roles"]
     return Deployment(c["fusd"], c["beru"], c["beru_faucet"], c["node_registry"], c["job_market"],
-                      int(c["deploy_block"]), r["coordinator"], r["verifier_a"], r["verifier_b"])
+                      int(c["deploy_block"]), r["coordinator"], r["verifier_a"], r["verifier_b"],
+                      c.get("competitions", ""))
 
 
 def abi(name: str) -> list:

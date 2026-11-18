@@ -1,0 +1,18 @@
+# strongchar-compete: deterministic metrics, canonical predictions and the sandbox runner for competitions.
+[project]
+name = "strongchar-compete"
+version = "0.1.0"
+description = "strongChar competitions: canonical predictions, deterministic metrics, sandboxed script runs"
+requires-python = ">=3.12,<3.13"
+license = "MIT"
+dependencies = ["numpy>=2,<3", "strongchar-core"]
+
+[tool.uv.sources]
+strongchar-core = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/strongchar_compete"]

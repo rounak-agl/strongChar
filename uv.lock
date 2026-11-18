@@ -4,6 +4,7 @@ requires-python = "==3.12.*"
 
 [manifest]
 members = [
+    "strongchar-compete",
     "strongchar-coordinator",
     "strongchar-core",
     "strongchar-datasets",
@@ -1354,6 +1355,21 @@ wheels = [
 ]
 
 [[package]]
+name = "strongchar-compete"
+version = "0.1.0"
+source = { editable = "packages/compete" }
+dependencies = [
+    { name = "numpy" },
+    { name = "strongchar-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "numpy", specifier = ">=2,<3" },
+    { name = "strongchar-core", editable = "packages/core" },
+]
+
+[[package]]
 name = "strongchar-coordinator"
 version = "0.1.0"
 source = { editable = "services/coordinator" }
@@ -1464,11 +1480,15 @@ name = "strongchar-verifier"
 version = "0.1.0"
 source = { editable = "apps/verifier" }
 dependencies = [
+    { name = "strongchar-compete" },
     { name = "strongchar-runtime" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "strongchar-runtime", editable = "packages/runtime" }]
+requires-dist = [
+    { name = "strongchar-compete", editable = "packages/compete" },
+    { name = "strongchar-runtime", editable = "packages/runtime" },
+]
 
 [[package]]
 name = "strongchar-workloads"
@@ -1490,6 +1510,7 @@ name = "strongchar-workspace"
 version = "0.0.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "strongchar-compete" },
     { name = "strongchar-coordinator" },
     { name = "strongchar-core" },
     { name = "strongchar-datasets" },
@@ -1509,6 +1530,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "strongchar-compete", editable = "packages/compete" },
     { name = "strongchar-coordinator", editable = "services/coordinator" },
     { name = "strongchar-core", editable = "packages/core" },
     { name = "strongchar-datasets", editable = "packages/datasets" },
