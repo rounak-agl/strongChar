@@ -8,6 +8,7 @@ from typing import Any
 
 import httpx
 from qorsdk import msg
+from qorsdk.evm_window import EVMWindowStatus, parse_evm_window
 from qorsdk.gas import calculate_fee, estimate_gas
 from qorsdk.key_integrity import sign_proof_of_possession
 from qorsdk.pqc_dx import build_register_pqc_key
@@ -101,6 +102,20 @@ class Chain:
     def send(self, account: UnifiedAccount, to: str, coins: dict[str, int]) -> TxResult:
         amount = [{"denom": d, "amount": str(a)} for d, a in coins.items()]
         return self.submit(account, [msg.bank.send(from_address=account.cosmos, to_address=to, amount=amount)])
+
+    # --- EVM windows -------------------------------------------------------------
+    def window(self, address: str) -> EVMWindowStatus:
+        return parse_evm_window(self.get(f"/qorechain/pqc/v1/evm_window/{address}"))
+
+    def open_window(self, account: UnifiedAccount, *, blocks: int, max_txs: int, max_value_uqor: int,
+                    targets: list[str] | tuple[str, ...] = ()) -> TxResult:
+        """Hybrid-signed MsgOpenEVMWindow. max_value counts value PLUS each tx's maximum fee, in uqor."""
+        m = msg.pqc.open_evm_window(sender=account.cosmos, blocks=blocks, max_txs=max_txs,
+                                    max_value=str(max_value_uqor), allowed_targets=list(targets))
+        return self.submit(account, [m])
+
+    def close_window(self, account: UnifiedAccount) -> TxResult:
+        return self.submit(account, [msg.pqc.close_evm_window(sender=account.cosmos)])
 
     def register_pqc_key(self, account: UnifiedAccount) -> TxResult:
         """Register the account's ML-DSA-87 key with proof of possession (bootstrap: classical signature)."""
