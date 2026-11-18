@@ -1,0 +1,18 @@
+# strongchar-workloads: bit-exact training workloads and the round runner nodes and verifiers share.
+[project]
+name = "strongchar-workloads"
+version = "0.1.0"
+description = "strongChar workloads: fixed-order kernel, exact MLP, round runner, op counts"
+requires-python = ">=3.12,<3.13"
+license = "MIT"
+dependencies = ["numpy>=2,<3", "strongchar-core"]
+
+[tool.uv.sources]
+strongchar-core = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/strongchar_workloads"]
