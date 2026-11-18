@@ -41,12 +41,12 @@ The project's running log. Update at the end of every working session. Newest lo
 | D6 | 18 Nov | Superseded by D18 | |
 | D7 | 18 Nov | Planning docs committed under docs/plan/ | Visible planning helps the AI-native award |
 | D8 | 18 Nov | Repo root = this folder | Your choice |
-| D9 | 18 Nov | Own ERC-20 token + native AMM swap | Your choice; BERU pool depends on Q3 |
+| D9 | 18 Nov | Own ERC-20 token + native AMM swap | Your choice; refined by D37 |
 | D10 | 18 Nov | Python for node, verifier and coordinator with the official Python SDKs; TS SDKs in the web app | All needed QoreChain packages exist on PyPI and are byte-compatible with TS |
 | D11 | 18 Nov | Competitions: code-only submissions; pinned CPU seeded sandbox, byte-identical predictions across two verifiers; single final ranking; verifiers score and ML-DSA-sign, labels revealed after | Your choices |
 | D12 | 18 Nov | Demo data: MNIST + synthetic sensitive tabular CSV | Your choice |
 | D13 | 18 Nov | Lean coordinator: never decrypts, never merges. Keeps indexing, node health, scheduling, openRound, timeouts, ciphertext-only blob store, signature relay, read API, admin pause/resume. Verifiers merge and gate | Server stays ciphertext-only; something still has to act on a clock |
-| D14 | 18 Nov | Token **Beru**, symbol **BERU**, 6 decimals, capped, faucet drip | Your choice; matches fUSD decimals |
+| D14 | 18 Nov | Token **Beru**, symbol **BERU**, 6 decimals, capped, faucet drip; role narrowed by D37 | Your choice; matches fUSD decimals |
 | D15 | 18 Nov | Hosting on AWS (project on the free plan, $100 credits to May 2027), Region ap-southeast-2 only. Machine split in D21 | Your choice; replaced the Oracle free-tier plan |
 | D16 | 18 Nov | Side entry (Q-Day exposure checker) in its own repo `strongChar-qday` | Your choice |
 | D17 | 18 Nov | Naming in RULES.md section 2 | Your choice |
@@ -72,6 +72,7 @@ The project's running log. Update at the end of every working session. Newest lo
 | D38 | 18 Nov | Seal keys (ML-KEM-1024 + X25519) are derived from each actor's mnemonic (`qoreseal.derive_seal_keys`, index 0) and registered on-chain; every sender verifies a recipient card before sealing; envelopes use hybrid mode with AAD `chain\|contract\|job\|round\|shard\|kind` and a purpose string per object kind | Spike S3 |
 | D39 | 18 Nov | Contracts keep precompile addresses as `immutable` values so the full 20-byte addresses appear in deployed code | The optimizer otherwise shrinks them to 2 bytes; the Ship Weeks check looks for the address in code |
 | D40 | 18 Nov | Verifiers canonicalise every prediction file before hashing, validity and scoring: classification → integer labels (probabilities, where a metric needs them, rounded to 6 decimals), regression → values rounded to 6 decimals, fixed CSV formatting. Validity compares canonical hashes; scores are computed from canonical predictions, so anyone can rerun on any architecture | Spike S5: raw floats differ across arm64/x86, canonical forms match |
+| D37 | 18 Nov | Job budgets and competition prizes are paid in fUSD; owners and hosts swap QOR → fUSD in native AMM pool 2 when needed, so the native AMM is a real funding step. BERU is the staking and slashing token for nodes and verifiers | Your choice after spike S4 (BERU can't join a native pool) |
 
 ## 3. Open questions
 
@@ -79,7 +80,7 @@ The project's running log. Update at the end of every working session. Newest lo
 |---|---|---|---|
 | Q1 | Does `pqcVerify` take raw bytes, a digest, or apply a context string? | Spike S2: plain FIPS-204 over the exact `msg` bytes, empty context, no hashing. Tampered or over-long signatures rejected | Closed (D35) |
 | Q2 | Can an account with a registered PQ key send EVM txs without a window? | Event FAQ: no | Closed (D24) |
-| Q3 | Does our own ERC-20 (BERU) become an `erc20:0x…` bank coin that a native AMM pool can hold? | Spike S4: no. `permissionless_registration` is false (needs governance), and creating a pool costs 100 QOR | Closed (D37 pending Rounak's choice) |
+| Q3 | Does our own ERC-20 (BERU) become an `erc20:0x…` bank coin that a native AMM pool can hold? | Spike S4: no. `permissionless_registration` is false (needs governance), and creating a pool costs 100 QOR | Closed (D37) |
 | Q4 | Cancun opcodes and randomness on chain 9800? | Chain config: Prague active; `prevrandao` = 0 | Closed (D25) |
 | Q5 | How exactly is a KEM key bound to the ML-DSA identity (recipient cards)? | Spike S3: the account registers its ML-KEM key with a hybrid-signed `MsgRegisterKEMKey` and signs a recipient card (chain, address, ML-KEM + X25519 keys) with both its secp256k1 and ML-DSA-87 keys; senders run `verify_recipient_card` against the on-chain keys | Closed (D38) |
 | Q6 | How is student status verified for Quantum Campus? | Rules: jury emails each member for proof of enrolment | Closed |
@@ -110,7 +111,8 @@ The project's running log. Update at the end of every working session. Newest lo
 - S4 done: Q3 closed, BERU can't join a native pool (no permissionless registration; pools cost 100 QOR). Swapped 2 QOR → 0.136 fUSD in pool 2 from the deployer (tx 1E6730B2…). BERU's role awaits Rounak's choice (D37).
 - Project page now lists the 5 addresses (D32). Platform verifies 6 features on-chain (AMM pools, EVM window incl. scoped, hybrid ML-DSA-87 txs, PQC key registration with PoP, QoreSeal key registry, test tokens), 4 of 10 SDKs, 3 of 3 commits. All four Ship Weeks badges earned.
 - S5 done: pinned sandbox image (python:3.12-slim by index digest; numpy 2.5.5, scipy 1.18.1, pandas 3.1.1, scikit-learn 1.9.1) run twice on x86 (laptop, runc) and twice on arm64 (verifiers VM, gVisor). Within each arch identical; across arch only canonicalised outputs match (D40).
-- Next: Rounak's choice on BERU (D37); budget alerts once Rounak gives an email; then Phase 1.
+- D37 decided: budgets and prizes in fUSD, funded via a QOR → fUSD swap in native pool 2 when needed; BERU for stakes and slashing. AWS budget `strongchar-credits` created ($100, usage before credits, email alerts at 70% and 85%). PR #3 merged.
+- Next: Phase 1 (core packages, contracts, deploy).
 
 ### 2026-11-18
 - Researched the event, past winners and similar projects. Category and scope decided (D1–D13).

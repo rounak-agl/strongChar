@@ -8,7 +8,8 @@ Status: v2 after the red-team review, 18 Nov 2026. Items marked **[verify]** dep
                          ┌────────────────────────── QoreChain testnet qorechain-diana ───────────────────────────┐
                          │ Native lane (hybrid secp256k1 + ML-DSA-87,      │ EVM lane (chain 9800, Prague rules)   │
                          │ hybrid mode "required", no classical fallback)  │                                       │
-                         │  • PQC key registry (ML-DSA-87, PoP)            │  • BeruToken (ERC-20) + BeruFaucet    │
+                         │  • PQC key registry (ML-DSA-87, PoP)            │  • fUSD (event ERC-20) for payments   │
+                         │                                                  │  • BeruToken + BeruFaucet (stakes)    │
                          │  • QoreSeal KEM key registry (ML-KEM-1024)      │  • NodeRegistry                       │
                          │  • EVM windows (MsgOpenEVMWindow, scoped)       │  • JobMarket  ──► pqcVerify 0x…0a01   │
                          │  • Native AMM (MsgCreatePool / SwapExactIn)     │  • Competitions ─► pqcKeyStatus 0x…0a02│
@@ -105,7 +106,7 @@ Every EVM transaction needs an open window, because every actor has a registered
 
 | Actor | allowedTargets | Max value | Max txs | Blocks |
 |---|---|---|---|---|
-| Data owner / host / entrant (browser) | BeruToken, JobMarket, Competitions | sized from measured gas (fees count) | 10 | about 1 hour (≈2,500 blocks) |
+| Data owner / host / entrant (browser) | fUSD, JobMarket, Competitions | sized from measured gas (fees count) | 10 | about 1 hour (≈2,500 blocks) |
 | Coordinator | JobMarket, Competitions | sized from measured gas | per round | rolling |
 | Verifiers | JobMarket, Competitions | sized from measured gas | per round | rolling |
 | Nodes | BeruToken, NodeRegistry, JobMarket | sized from measured gas | per round | rolling |
@@ -120,7 +121,7 @@ Rules:
 
 | Contract | Responsibility | Notes |
 |---|---|---|
-| `BeruToken` | Capped ERC-20 Beru (BERU, 6 decimals) for stakes, budgets and prizes | |
+| `BeruToken` | Capped ERC-20 Beru (BERU, 6 decimals) for node and verifier stakes and slashing | Budgets and prizes use fUSD (`0x97143B771D34ddb9130b807b135Ae675A5a963CA`, 6 decimals), which also trades in native AMM pool 2 |
 | `BeruFaucet` | Capped drip per address per day, total cap | |
 | `NodeRegistry` | Operator stake, join, exit | Joining requires `pqcKeyStatus(op).registered && possessionProven` |
 | `JobMarket` | Jobs, rounds, commits, reveals, verdicts, settlement, slashing, claims, refunds | Verifier pair fixed at deploy (immutable, no admin setter). `finalizeRound` is callable by anyone holding both valid verifier signatures, so the coordinator is a convenience, not a trust point |
