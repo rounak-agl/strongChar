@@ -6,7 +6,7 @@ requires-python = ">=3.12,<3.13"
 dependencies = ["strongchar-core", "strongchar-datasets", "strongchar-qore", "strongchar-workloads"]
 
 [tool.uv.workspace]
-members = ["packages/*"]
+members = ["packages/core", "packages/datasets", "packages/qore", "packages/workloads"]
 
 [tool.uv.sources]
 strongchar-core = { workspace = true }

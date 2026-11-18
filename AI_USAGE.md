@@ -25,6 +25,7 @@ strongChar is built by one person (Rounak) working with an AI coding agent (Clau
 | 18 Nov | Spike S5: pinned sandbox image, determinism runs on x86 and arm64 under gVisor; proposed canonicalising predictions | — |
 | 18 Nov | Listed the 5 project addresses and ran the Ship Weeks checks (all four badges earned) | — |
 | 18 Nov | Phase 1 core, workloads and datasets packages with tests; cross-checked the deterministic maths bit for bit and the training self-test on x86 and arm64; synthetic health dataset | Approved starting Phase 1 |
+| 18–19 Nov | Contracts (Beru token and faucet, NodeRegistry, JobMarket) with 25 Foundry tests; deploy script; deployed to diana with a live signature check | Reviewed and approved the merge and the deploy |
 | 18 Nov | AWS servers following AWS's EC2 launch guidance; found the Free plan refuses `t4g.medium` and proposed alternatives with prices; bootstrap script with gVisor | Approved spending, chose two small worker servers |
 
 ## Where AI was not trusted blindly

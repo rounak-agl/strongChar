@@ -12,6 +12,19 @@ Built for **Build Before Q-Day: The QoreChain Developer Fest** (category: Encryp
 
 Status: in development. The plan lives in [`docs/plan/`](docs/plan/).
 
+## Deployed on qorechain-diana (EVM chain 9800)
+
+| Contract | Address |
+|---|---|
+| JobMarket | `0xa5FACae25c46bA115f4A157876dbFb67cF32EaDa` |
+| NodeRegistry | `0x081138AA2ec962d7Fe583F3F135683D9C3B273f1` |
+| BeruToken (BERU) | `0x6Cd5aa3233E040080ab763a15b7c33ac0bC46D34` |
+| BeruFaucet | `0xCF740c7D85C5E708cB8e3a64873aa4dB29Ba3b67` |
+
+Payments use the event's fUSD ERC-20 at `0x97143B771D34ddb9130b807b135Ae675A5a963CA`. Addresses and the deploy block live in [`networks/diana.toml`](networks/diana.toml); ABIs in [`packages/abi`](packages/abi).
+
+Live check after deploy: two real ML-DSA-87 signatures from the registered verifier keys verify through `JobMarket.checkSignature` with the chain's `pqcVerify` precompile (211,870 gas each); a tampered signature is rejected.
+
 ## Credits
 
 Built with these open-source projects and QoreChain kits:
