@@ -7,7 +7,10 @@ members = [
     "strongchar-coordinator",
     "strongchar-core",
     "strongchar-datasets",
+    "strongchar-node",
     "strongchar-qore",
+    "strongchar-runtime",
+    "strongchar-verifier",
     "strongchar-workloads",
     "strongchar-workspace",
 ]
@@ -1402,6 +1405,17 @@ requires-dist = [
 ]
 
 [[package]]
+name = "strongchar-node"
+version = "0.1.0"
+source = { editable = "apps/node" }
+dependencies = [
+    { name = "strongchar-runtime" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "strongchar-runtime", editable = "packages/runtime" }]
+
+[[package]]
 name = "strongchar-qore"
 version = "0.1.0"
 source = { editable = "packages/qore" }
@@ -1423,6 +1437,38 @@ requires-dist = [
     { name = "strongchar-core", editable = "packages/core" },
     { name = "web3", specifier = ">=7,<9" },
 ]
+
+[[package]]
+name = "strongchar-runtime"
+version = "0.1.0"
+source = { editable = "packages/runtime" }
+dependencies = [
+    { name = "httpx" },
+    { name = "strongchar-core" },
+    { name = "strongchar-datasets" },
+    { name = "strongchar-qore" },
+    { name = "strongchar-workloads" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "strongchar-core", editable = "packages/core" },
+    { name = "strongchar-datasets", editable = "packages/datasets" },
+    { name = "strongchar-qore", editable = "packages/qore" },
+    { name = "strongchar-workloads", editable = "packages/workloads" },
+]
+
+[[package]]
+name = "strongchar-verifier"
+version = "0.1.0"
+source = { editable = "apps/verifier" }
+dependencies = [
+    { name = "strongchar-runtime" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "strongchar-runtime", editable = "packages/runtime" }]
 
 [[package]]
 name = "strongchar-workloads"
@@ -1447,7 +1493,10 @@ dependencies = [
     { name = "strongchar-coordinator" },
     { name = "strongchar-core" },
     { name = "strongchar-datasets" },
+    { name = "strongchar-node" },
     { name = "strongchar-qore" },
+    { name = "strongchar-runtime" },
+    { name = "strongchar-verifier" },
     { name = "strongchar-workloads" },
 ]
 
@@ -1463,7 +1512,10 @@ requires-dist = [
     { name = "strongchar-coordinator", editable = "services/coordinator" },
     { name = "strongchar-core", editable = "packages/core" },
     { name = "strongchar-datasets", editable = "packages/datasets" },
+    { name = "strongchar-node", editable = "apps/node" },
     { name = "strongchar-qore", editable = "packages/qore" },
+    { name = "strongchar-runtime", editable = "packages/runtime" },
+    { name = "strongchar-verifier", editable = "apps/verifier" },
     { name = "strongchar-workloads", editable = "packages/workloads" },
 ]
 
