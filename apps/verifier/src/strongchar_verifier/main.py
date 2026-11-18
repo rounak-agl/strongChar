@@ -34,6 +34,14 @@ class Verifier:
         self.window = WindowManager(self.c.chain, self.actor.account, (self.c.dep.job_market,))
         self.verifiers = [self.c.dep.verifier_a, self.c.dep.verifier_b]
         self.addr = self.actor.evm.lower()
+        self.compete = None
+        if self.c.dep.competitions:
+            from pathlib import Path
+
+            from .compete import CompeteVerifier
+
+            self.compete = CompeteVerifier(self.actor, self.c, self.coord,
+                                           Path.home() / ".local/state/strongchar" / name)
 
     def publish(self) -> None:
         a = self.actor
@@ -146,6 +154,8 @@ class Verifier:
         while True:
             try:
                 self.step()
+                if self.compete:
+                    self.compete.step()
             except TxReverted as e:
                 log.warning("%s", e)
             except Exception:

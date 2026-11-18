@@ -5,12 +5,13 @@ version = "0.1.0"
 description = "strongChar verifier service"
 requires-python = ">=3.12,<3.13"
 license = "MIT"
-dependencies = ["strongchar-runtime"]
+dependencies = ["strongchar-compete", "strongchar-runtime"]
 
 [project.scripts]
 strongchar-verifier = "strongchar_verifier.main:main"
 
 [tool.uv.sources]
+strongchar-compete = { workspace = true }
 strongchar-runtime = { workspace = true }
 
 [build-system]
