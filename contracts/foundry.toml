@@ -7,7 +7,9 @@ solc_version = "0.8.30"
 evm_version = "cancun"
 optimizer = true
 optimizer_runs = 200
-via_ir = false
+via_ir = true
+# Tests read the cross-language vectors written by strongchar_core.vectors.
+fs_permissions = [{ access = "read", path = "../vectors" }]
 remappings = [
   "forge-std/=lib/forge-std/src/",
   "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
