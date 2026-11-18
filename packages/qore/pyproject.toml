@@ -11,7 +11,11 @@ dependencies = [
   "qorechain-qoresign==0.2.0",
   "qorechain-pqc==0.2.3",
   "web3>=7,<9",
+  "strongchar-core",
 ]
+
+[tool.uv.sources]
+strongchar-core = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

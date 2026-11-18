@@ -1329,6 +1329,7 @@ dependencies = [
     { name = "qorechain-qoreseal" },
     { name = "qorechain-qoresign" },
     { name = "qorechain-sdk" },
+    { name = "strongchar-core" },
     { name = "web3" },
 ]
 
@@ -1338,6 +1339,7 @@ requires-dist = [
     { name = "qorechain-qoreseal", specifier = "==0.1.0" },
     { name = "qorechain-qoresign", specifier = "==0.2.0" },
     { name = "qorechain-sdk", specifier = "==0.14.0" },
+    { name = "strongchar-core", editable = "packages/core" },
     { name = "web3", specifier = ">=7,<9" },
 ]
 
