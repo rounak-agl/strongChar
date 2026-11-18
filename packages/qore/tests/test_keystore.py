@@ -41,3 +41,13 @@ def test_unknown_actor(tmp_path):
     keystore.create(path, actors=("a",))
     with pytest.raises(KeyError):
         keystore.load("nobody", path)
+
+
+def test_repr_never_shows_secrets(tmp_path):
+    path = tmp_path / "accounts.json"
+    keystore.create(path, actors=("a",))
+    actor = keystore.load("a", path)
+    text = repr(actor) + str(actor)
+    assert actor.account.private_key.hex() not in text
+    assert actor._mnemonic.split()[0] not in text.split()
+    assert actor.qor in text
