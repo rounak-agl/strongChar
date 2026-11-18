@@ -3,12 +3,13 @@
 name = "strongchar-workspace"
 version = "0.0.0"
 requires-python = ">=3.12,<3.13"
-dependencies = ["strongchar-coordinator", "strongchar-node", "strongchar-verifier", "strongchar-core", "strongchar-datasets", "strongchar-qore", "strongchar-runtime", "strongchar-workloads"]
+dependencies = ["strongchar-compete", "strongchar-coordinator", "strongchar-node", "strongchar-verifier", "strongchar-core", "strongchar-datasets", "strongchar-qore", "strongchar-runtime", "strongchar-workloads"]
 
 [tool.uv.workspace]
-members = ["apps/node", "apps/verifier", "packages/core", "packages/datasets", "packages/qore", "packages/runtime", "packages/workloads", "services/coordinator"]
+members = ["apps/node", "apps/verifier", "packages/compete", "packages/core", "packages/datasets", "packages/qore", "packages/runtime", "packages/workloads", "services/coordinator"]
 
 [tool.uv.sources]
+strongchar-compete = { workspace = true }
 strongchar-coordinator = { workspace = true }
 strongchar-node = { workspace = true }
 strongchar-verifier = { workspace = true }
