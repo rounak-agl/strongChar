@@ -73,6 +73,9 @@ The project's running log. Update at the end of every working session. Newest lo
 | D39 | 18 Nov | Contracts keep precompile addresses as `immutable` values so the full 20-byte addresses appear in deployed code | The optimizer otherwise shrinks them to 2 bytes; the Ship Weeks check looks for the address in code |
 | D40 | 18 Nov | Verifiers canonicalise every prediction file before hashing, validity and scoring: classification → integer labels (probabilities, where a metric needs them, rounded to 6 decimals), regression → values rounded to 6 decimals, fixed CSV formatting. Validity compares canonical hashes; scores are computed from canonical predictions, so anyone can rerun on any architecture | Spike S5: raw floats differ across arm64/x86, canonical forms match |
 | D37 | 18 Nov | Job budgets and competition prizes are paid in fUSD; owners and hosts swap QOR → fUSD in native AMM pool 2 when needed, so the native AMM is a real funding step. BERU is the staking and slashing token for nodes and verifiers | Your choice after spike S4 (BERU can't join a native pool) |
+| D41 | 18 Nov | One PQ-signed settlement per round carries the verdicts (slashed bitmap), merge result and payouts; no separate verdict signatures. Kinds: SETTLEMENT, VALIDITY, SCORES | Halves the pqcVerify calls per round |
+| D42 | 18 Nov | No on-chain round seeds: verifiers replay every step, so nothing needs sampling; batches come from the deterministic epoch shuffle | Removes blockhash timing and a bias surface |
+| D43 | 18 Nov | JobMarket rules: coordinator-only openRound; node address bound in commitments; checkpoints must start at the round's weights; settlement needs quorum reveals, both verifier signatures within an expiry block, payouts in ascending address order to revealed, unslashed nodes summing exactly to the round budget; cheaters lose the job's full stake (burned), missed reveals 10%; void below quorum and expire after finalizeBy return the budget; owner can cancel between rounds | Contract tests cover each rule |
 
 ## 3. Open questions
 
@@ -114,7 +117,9 @@ The project's running log. Update at the end of every working session. Newest lo
 - D37 decided: budgets and prizes in fUSD, funded via a QOR → fUSD swap in native pool 2 when needed; BERU for stakes and slashing. AWS budget `strongchar-credits` created ($100, usage before credits, email alerts at 70% and 85%). PR #3 merged.
 - Phase 1 started. P1.1 done: `strongchar_core` (keccak, weight blobs, exact judge, median-clip trimmed-mean merge and gate, equal fUSD payout, canonical evidence, finalize with slashing, PQ message encoding, cross-language vectors), `strongchar_workloads` (fixed-order kernel, exact MLP, round runner, op counts), `strongchar_datasets` (canonicaliser, split with an owner holdout, shard files). Merge, gate, shuffle, kernel and MLP steps match the earlier deterministic maths bit for bit on random inputs. The MLP self-test hash is identical on x86 and on arm64 under gVisor (389ba66f…). P1.2 done: seeded synthetic health table, 20,000 rows, 20% positives. 33 tests green (+1 live MNIST test).
 - Note: the health table has raw-scale features; the job flow must standardise them (fixed-order stats from the train split) before training.
-- Next: P1.3 (qore wrapper: seal/open, PQ signing), P1.4 contracts.
+- P1.3 done (#6). P1.4 done on branch p1-contracts: BeruToken (fixed supply, no admin), BeruFaucet, Encodings (checked against the Python vectors), NodeRegistry, JobMarket (D41–D43), `checkSignature` view for a free live pqcVerify check. 25 Foundry tests incl. a payout fuzz. Real verifier-a/b ML-DSA signatures over the vector message in vectors/pq_signatures.json.
+- Finding: Foundry fork tests can't exercise QoreChain's precompiles (forks run in Foundry's own EVM, where 0x…0a01/0a02 have no code), so the real pqcVerify check runs against diana with eth_call after deploy.
+- Next: P1.5 deploy (needs Rounak's go-ahead), P1.6 CI.
 
 ### 2026-11-18
 - Researched the event, past winners and similar projects. Category and scope decided (D1–D13).
