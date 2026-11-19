@@ -139,6 +139,9 @@ The project's running log. Update at the end of every working session. Newest lo
 - Next: competition pages once Competitions is deployed; side entry (Phase 5) scaffold.
 - P6.1 files merged (#12): one service image (builds and runs read-only as uid 10002), compose per server, per-actor key files (`ops/split_keys.py`, mode 600, owned by 10002), `ops/up.sh` (refuses loose key files, builds the sandbox image on the verifiers server). The coordinator trusts its reverse proxy for client addresses (no published ports) and sends no server header.
 - Blocked: running the stack on the three servers needs Session Manager / the AWS tool, and it puts service mnemonics on the servers. Waiting for Rounak.
+- Finding: diana's RPC refuses eth_getLogs over more than 10,000 blocks; the chain passed that since the deploy block, which broke round-open lookups (signature expiry), competition expiry and web event reads. Fixed (#14): services scan back from the head in windows; the web scans in parallel and caches per query.
+- Competition pages done (#14): list, ranking with the PQ-signed score table, per-entry verdicts with both sandbox runs, label reveal recomputed against the commitment. Not-deployed state until Competitions is on diana.
+- Finding: a crashing script's last stderr line was published in its run result (a test-feature leak, up to 200 chars per entry). Fixed (#15): crash detail is only the exit code; runtime in whole seconds. THREAT_MODEL.md added (#15).
 
 ### 2026-11-18
 - Researched the event, past winners and similar projects. Category and scope decided (D1–D13).
