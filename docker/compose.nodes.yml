@@ -1,0 +1,19 @@
+# Nodes server: four nodes (node-4 cheats for the demo). No inbound ports; each node gets only its own key file.
+x-node: &node
+  image: strongchar-app:1
+  environment: { STRONGCHAR_COORDINATOR: "https://${API_HOST}" }
+  read_only: true
+  tmpfs: ["/tmp", "/home/strongchar/.local/state"]
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  restart: unless-stopped
+services:
+  node-1: { <<: *node, command: ["strongchar-node", "--name", "node-1"], secrets: [{source: node-1, target: keys}], environment: { STRONGCHAR_COORDINATOR: "https://${API_HOST}", STRONGCHAR_KEYSTORE: /run/secrets/keys } }
+  node-2: { <<: *node, command: ["strongchar-node", "--name", "node-2"], secrets: [{source: node-2, target: keys}], environment: { STRONGCHAR_COORDINATOR: "https://${API_HOST}", STRONGCHAR_KEYSTORE: /run/secrets/keys } }
+  node-3: { <<: *node, command: ["strongchar-node", "--name", "node-3"], secrets: [{source: node-3, target: keys}], environment: { STRONGCHAR_COORDINATOR: "https://${API_HOST}", STRONGCHAR_KEYSTORE: /run/secrets/keys } }
+  node-4: { <<: *node, command: ["strongchar-node", "--name", "node-4", "--cheat"], secrets: [{source: node-4, target: keys}], environment: { STRONGCHAR_COORDINATOR: "https://${API_HOST}", STRONGCHAR_KEYSTORE: /run/secrets/keys } }
+secrets:
+  node-1: { file: ./secrets/node-1.json }
+  node-2: { file: ./secrets/node-2.json }
+  node-3: { file: ./secrets/node-3.json }
+  node-4: { file: ./secrets/node-4.json }

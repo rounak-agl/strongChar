@@ -1,0 +1,16 @@
+# Verifiers server: both verifiers. Competition scripts run in gVisor (runsc) through the host Docker daemon; the
+# socket is the price of launching sandboxes, so this server runs nothing else and accepts no inbound connections.
+x-verifier: &verifier
+  image: strongchar-app:1
+  read_only: true
+  tmpfs: ["/tmp", "/home/strongchar/.local/state"]
+  volumes: ["/var/run/docker.sock:/var/run/docker.sock", "/tmp/strongchar-runs:/tmp/strongchar-runs"]
+  group_add: ["${DOCKER_GID}"]
+  security_opt: ["no-new-privileges:true"]
+  restart: unless-stopped
+services:
+  verifier-a: { <<: *verifier, command: ["strongchar-verifier", "--name", "verifier-a"], secrets: [{source: verifier-a, target: keys}], environment: { STRONGCHAR_COORDINATOR: "https://${API_HOST}", STRONGCHAR_KEYSTORE: /run/secrets/keys, STRONGCHAR_SANDBOX_RUNTIME: runsc, TMPDIR: /tmp/strongchar-runs } }
+  verifier-b: { <<: *verifier, command: ["strongchar-verifier", "--name", "verifier-b"], secrets: [{source: verifier-b, target: keys}], environment: { STRONGCHAR_COORDINATOR: "https://${API_HOST}", STRONGCHAR_KEYSTORE: /run/secrets/keys, STRONGCHAR_SANDBOX_RUNTIME: runsc, TMPDIR: /tmp/strongchar-runs } }
+secrets:
+  verifier-a: { file: ./secrets/verifier-a.json }
+  verifier-b: { file: ./secrets/verifier-b.json }

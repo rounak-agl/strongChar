@@ -53,7 +53,9 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
     app, _ = build(Path(os.environ.get("STRONGCHAR_DATA", "./coordinator-data")))
     uvicorn.run(app, host=os.environ.get("STRONGCHAR_HOST", "127.0.0.1"), port=int(os.environ.get("STRONGCHAR_PORT", "8700")),
-                proxy_headers=True, log_level="info")
+                proxy_headers=True, server_header=False, log_level="info",
+                # Only the reverse proxy can reach the coordinator on a server, so it may name the client's address.
+                forwarded_allow_ips=os.environ.get("STRONGCHAR_TRUSTED_PROXIES", "127.0.0.1"))
 
 
 if __name__ == "__main__":
