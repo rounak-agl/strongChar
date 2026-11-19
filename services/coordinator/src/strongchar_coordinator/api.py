@@ -257,17 +257,24 @@ def create_app(store: Store, chain: ChainView, allowed_origins: list[str] | None
             raise HTTPException(404, "no card for this address")
         return {"card": card}
 
-    TOPIC = r"^comp-[0-9]{1,9}-(run|validity|scores)(-[0-9]{1,4})?$"
+    TOPIC = r"^(comp-[0-9]{1,9}-(run|validity|scores)(-[0-9]{1,4})?|job-[0-9]{1,9}-round-[0-9]{1,4}-feed)$"
 
     @app.post("/v1/attest/{topic}")
     def attest(topic: str, body: dict[str, Any], who: Caller) -> dict:
-        """Verifier-only notes for competitions: raw run results, then the signed verdicts and score tables."""
+        """Verifier-only notes: competition run results, verdicts and score tables, and each round's feed (the
+        shards and start weights a verifier re-sealed to the nodes seated in that round)."""
         import re
 
         if not re.match(TOPIC, topic) or not chain.is_verifier(who):
-            raise HTTPException(403, "only the verifiers post competition attestations")
+            raise HTTPException(403, "only the verifiers post attestations")
         if len(json.dumps(body)) > 64 * 1024:
             raise HTTPException(413, "attestation too large")
+        if topic.endswith("-feed"):
+            ids = [b for e in body.get("nodes", {}).values() if isinstance(e, dict)
+                   for b in (e.get("shardBlob"), e.get("weightsBlob")) if isinstance(b, str)]
+            if any(store.get_blob(b) is None for b in ids):
+                raise HTTPException(400, "feed names a blob that was never uploaded")
+            store.pin(ids)
         store.attest(topic, who, body)
         return {"ok": True}
 
@@ -299,5 +306,13 @@ def create_app(store: Store, chain: ChainView, allowed_origins: list[str] | None
     @app.get("/v1/nodes")
     def nodes() -> dict:
         return {"nodes": store.live_nodes()}
+
+    @app.get("/v1/jobs/{job}/matcher")
+    def matcher(job: int) -> dict:
+        """The keeper's last seating decision for a job: who was seated, and why every other node wasn't."""
+        raw = store.kv_get(f"matcher/{job}")
+        if raw is None:
+            raise HTTPException(404, "the keeper hasn't tried to seat this job yet")
+        return json.loads(raw)
 
     return app

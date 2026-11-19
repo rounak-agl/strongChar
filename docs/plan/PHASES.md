@@ -67,7 +67,7 @@ Tasks
 - [x] P2.2 (19 Nov; verifiers replay fully, so nodes only commit/reveal hashes and upload no weights) Node: fetch → open shard → exact train → commit → reveal → seal weights to {a, b} → upload. Cheat mode for node-4.
 - [x] P2.3 (19 Nov) Verifier: open → replay → judge → merge and gate → sign verdict and settlement with ML-DSA → submit → seal new global weights to next recipients (final round: owner only).
 - [x] P2.4 (19 Nov) Windows: every service checks and renews its window before each EVM tx; lapse test.
-- [ ] P2.4a Benchmark-ranked node selection (cut item 2).
+- [~] P2.4a (20 Nov, D45: matcher, round feed and node CLI built and unit-tested; live run on diana pending Rounak's OK) Benchmark-ranked node selection, seated per round from the live fleet.
 - [x] P2.5 (19 Nov) `scripts/demo_job.py` runs a 2-round, 4-node MNIST job on diana and prints every tx hash.
 - [x] P2.6 (19 Nov) Ciphertext-only test (DB, blob dir, logs) and API hardening tests.
 - [x] P2.7 (19 Nov) Native AMM in the funding flow: QOR → fUSD swap in pool 2 with a slippage bound, from Python and the web app (cut item 3 falls back to a scripted swap).
@@ -81,7 +81,7 @@ Tasks
 - [x] P3.2 (19 Nov; accuracy, macro-F1, RMSE; ROC-AUC cut per D23 item 1) Metrics (accuracy, macro-F1, RMSE, ROC-AUC) with deterministic sums and tests.
 - [x] P3.3 (19 Nov; deploy waiting for Rounak's go-ahead) `Competitions` contract: create, submit, validity (2 signed), scores (2 signed, `pqcVerify`), revealLabels (host, or a verifier after the deadline), settle, refund; Foundry tests.
 - [x] P3.4 (19 Nov) Verifier competition loop: validate on submit, score after the deadline, publish predictions after scoring.
-- [ ] P3.5 (written 19 Nov; runs after the Competitions deploy) `scripts/demo_compete.py`: host on the sensitive CSV, three entries (good, weaker, one that tries the network or crashes), validity, scoring, reveal, settle on diana.
+- [x] P3.5 (20 Nov: competition 1 on diana, settled) `scripts/demo_compete.py`: host on the sensitive CSV, three entries (good, weaker, one that tries the network or crashes), validity, scoring, reveal, settle on diana.
 
 Exit check: the demo competition completes on diana; the bad entry is rejected with the right reason; scores are PQ-verified on-chain; labels verify against the commitment.
 

@@ -44,13 +44,29 @@ def settled_rounds(c: Contracts, job: int, before: int) -> list[int]:
     return [r for r in range(1, before) if c.round(job, r)[0][0] == ROUND_SETTLED]
 
 
+_opened: dict[tuple[int, int], dict] = {}
+
+
+def round_opened(c: Contracts, job: int, rnd: int) -> dict:
+    """The RoundOpened log (cached: it never changes). It is the only record of which shard each node trains."""
+    if (job, rnd) not in _opened:
+        log = first_log(c.market.events.RoundOpened, c.dep.deploy_block, c.evm.w3.eth.block_number,
+                        {"jobId": job, "roundId": rnd})
+        if log is None:
+            raise LookupError(f"no RoundOpened for job {job} round {rnd}")
+        _opened[(job, rnd)] = log
+    return _opened[(job, rnd)]
+
+
 def opened_block(c: Contracts, job: int, rnd: int) -> int:
     """Block of the RoundOpened event; both verifiers derive the signature expiry from it."""
-    log = first_log(c.market.events.RoundOpened, c.dep.deploy_block, c.evm.w3.eth.block_number,
-                    {"jobId": job, "roundId": rnd})
-    if log is None:
-        raise LookupError(f"no RoundOpened for job {job} round {rnd}")
-    return log["blockNumber"]
+    return round_opened(c, job, rnd)["blockNumber"]
+
+
+def shard_of(c: Contracts, job: int, rnd: int) -> dict[str, int]:
+    """node (lowercase) -> shard index it was seated on in this round."""
+    a = round_opened(c, job, rnd)["args"]
+    return {n.lower(): int(s) for n, s in zip(a["nodes"], a["shards"])}
 
 
 def checksum(a: str) -> str:

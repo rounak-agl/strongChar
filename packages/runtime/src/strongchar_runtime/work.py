@@ -34,18 +34,51 @@ def kem_keys(chain: Chain, addresses: Sequence[str]) -> list[bytes]:
     return out
 
 
-def shard_recipients(draft: dict, shard: int, verifiers: Sequence[str]) -> list[str]:
-    return [draft["manifest"]["assignment"][shard], *verifiers]
+def shard_bytes(chain: Chain, coord: Coordinator, keys, contract: str, job: int, draft: dict, shard: int,
+                verifiers: Sequence[str]) -> bytes:
+    """The owner's shard file. Owners seal shards to the two verifiers only, since nodes are picked per round."""
+    text = coord.get_blob(draft["manifest"]["shards"][shard])
+    aad = seal.aad(contract, job, 0, shard, Kind.SHARD, kem_keys(chain, verifiers))
+    return seal.open_(text, keys, Kind.SHARD, aad)
+
+
+def shard_hash(draft: dict, shard: int) -> bytes:
+    return bytes.fromhex(draft["manifest"]["shardHashes"][shard][2:])
 
 
 def open_shard(chain: Chain, coord: Coordinator, keys, contract: str, job: int, draft: dict, shard: int,
                verifiers: Sequence[str]) -> tuple[int, np.ndarray, np.ndarray]:
     """(start row, x, y) of one shard, after checking its bytes against the hash the owner committed to."""
-    text = coord.get_blob(draft["manifest"]["shards"][shard])
-    aad = seal.aad(contract, job, 0, shard, Kind.SHARD, kem_keys(chain, shard_recipients(draft, shard, verifiers)))
-    data = seal.open_(text, keys, Kind.SHARD, aad)
-    expected = bytes.fromhex(draft["manifest"]["shardHashes"][shard][2:])
+    return parse(shard_bytes(chain, coord, keys, contract, job, draft, shard, verifiers), shard_hash(draft, shard))
+
+
+# ---- the round feed --------------------------------------------------------------------------------------------
+# When a round opens, a verifier re-seals each seated node's shard (and, after round 1, the start weights) to that
+# node alone. The AAD binds each envelope to this job, round and shard, so a feed can't be replayed into another
+# round. Nodes still check every byte against hashes the owner and the chain fixed, so a verifier can't swap data.
+
+def feed_topic(job: int, rnd: int) -> str:
+    return f"job-{job}-round-{rnd}-feed"
+
+
+def feed_aad(contract: str, job: int, rnd: int, shard: int, kind: Kind, node_kem: bytes) -> bytes:
+    return seal.aad(contract, job, rnd, shard, kind, [node_kem])
+
+
+def open_fed_shard(coord: Coordinator, keys, contract: str, job: int, rnd: int, shard: int, node_kem: bytes,
+                   blob: str, expected: bytes) -> tuple[int, np.ndarray, np.ndarray]:
+    data = seal.open_(coord.get_blob(blob), keys, Kind.SHARD, feed_aad(contract, job, rnd, shard, Kind.SHARD, node_kem))
     return parse(data, expected)
+
+
+def open_fed_weights(spec: JobSpec, coord: Coordinator, keys, contract: str, job: int, rnd: int, shard: int,
+                     node_kem: bytes, blob: str, expected_hash: bytes) -> np.ndarray:
+    data = seal.open_(coord.get_blob(blob), keys, Kind.GLOBAL,
+                      feed_aad(contract, job, rnd, shard, Kind.GLOBAL, node_kem))
+    w = from_blob(spec.hash, data, spec.workload().n_params())
+    if weights_hash(spec.hash, w) != expected_hash:
+        raise ValueError("fed start weights don't match the round's start hash")
+    return w
 
 
 def open_val(chain: Chain, coord: Coordinator, keys, contract: str, job: int, draft: dict,
