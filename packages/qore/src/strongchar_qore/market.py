@@ -91,7 +91,8 @@ class Contracts:
 
     def events(self, name: str, from_block: int, to_block: int | str = "latest", contract: str = "market") -> list:
         c = self.market if contract == "market" else self.registry
-        return getattr(c.events, name).get_logs(from_block=from_block, to_block=to_block)
+        to = self.evm.w3.eth.block_number if to_block == "latest" else to_block
+        return [x for lo, hi in reversed(list(windows(from_block, to))) for x in getattr(c.events, name).get_logs(from_block=lo, to_block=hi)]
 
     # ---- writes ------------------------------------------------------------
     def settlement_tuple(self, s) -> tuple:
@@ -108,3 +109,22 @@ class Contracts:
                    window: WindowManager | None = None) -> EvmReceipt:
         fn = self.market.functions.openRound(job_id, [Web3.to_checksum_address(n) for n in nodes], list(shards))
         return self.send(account, fn, window)
+
+
+LOG_SPAN = 10_000  # diana's RPC refuses eth_getLogs over more blocks than this
+
+
+def windows(lo: int, hi: int, span: int = LOG_SPAN):
+    """[lo, hi] as inclusive block ranges of at most `span` blocks, newest first."""
+    while hi >= lo:
+        yield max(lo, hi - span + 1), hi
+        hi -= span
+
+
+def first_log(event, from_block: int, latest: int, argument_filters: dict) -> dict | None:
+    """The newest matching log, scanning back from `latest` a window at a time (ids here match exactly one event)."""
+    for lo, hi in windows(from_block, latest):
+        logs = event.get_logs(from_block=lo, to_block=hi, argument_filters=argument_filters)
+        if logs:
+            return logs[-1]
+    return None

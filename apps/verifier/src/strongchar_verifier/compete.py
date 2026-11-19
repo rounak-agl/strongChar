@@ -20,7 +20,7 @@ from strongchar_compete.sandbox import run_script
 from strongchar_core.encodings import PQKind, scores_payload, validity_payload
 from strongchar_qore import pq, seal
 from strongchar_qore.deployment import abi
-from strongchar_qore.market import Contracts, WindowManager
+from strongchar_qore.market import Contracts, WindowManager, first_log
 from strongchar_qore.seal import Kind
 from strongchar_runtime.client import Coordinator
 from strongchar_runtime.work import kem_keys
@@ -70,6 +70,7 @@ class CompeteVerifier:
         self.state = state / "competitions"
         self.state.mkdir(parents=True, exist_ok=True)
         self._bundles: dict[int, dict] = {}
+        self._created: dict[int, int] = {}
 
     # ---- helpers ------------------------------------------------------------
     def _send(self, fn) -> str:
@@ -89,8 +90,12 @@ class CompeteVerifier:
         return self._bundles[cid]
 
     def _expiry(self, cid: int) -> int:
-        logs = self.comp.events.Created.get_logs(from_block=self.c.dep.deploy_block, argument_filters={"id": cid})
-        return logs[0]["blockNumber"] + EXPIRY_BLOCKS
+        if cid not in self._created:
+            log = first_log(self.comp.events.Created, self.c.dep.deploy_block, self.c.evm.w3.eth.block_number, {"id": cid})
+            if log is None:
+                raise LookupError(f"no Created event for competition {cid}")
+            self._created[cid] = log["blockNumber"]
+        return self._created[cid] + EXPIRY_BLOCKS
 
     def _sign(self, kind: PQKind, payload: bytes, expiry: int) -> str:
         _, sig = pq.sign_message(self.actor.account, 9800, self.contract, kind, payload, expiry)

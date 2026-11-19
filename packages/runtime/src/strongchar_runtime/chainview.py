@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from strongchar_qore.market import Contracts
+from strongchar_qore.market import Contracts, first_log
 from web3 import Web3
 
 ROUND_OPEN, ROUND_SETTLED = 1, 2
@@ -46,10 +46,11 @@ def settled_rounds(c: Contracts, job: int, before: int) -> list[int]:
 
 def opened_block(c: Contracts, job: int, rnd: int) -> int:
     """Block of the RoundOpened event; both verifiers derive the signature expiry from it."""
-    logs = c.market.events.RoundOpened.get_logs(from_block=c.dep.deploy_block, argument_filters={"jobId": job, "roundId": rnd})
-    if not logs:
+    log = first_log(c.market.events.RoundOpened, c.dep.deploy_block, c.evm.w3.eth.block_number,
+                    {"jobId": job, "roundId": rnd})
+    if log is None:
         raise LookupError(f"no RoundOpened for job {job} round {rnd}")
-    return logs[0]["blockNumber"]
+    return log["blockNumber"]
 
 
 def checksum(a: str) -> str:
