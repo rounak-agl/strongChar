@@ -10,3 +10,6 @@ contracts/lib
 research_notes
 reports
 **/__pycache__
+docker/secrets
+.env
+.env.*
