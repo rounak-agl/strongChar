@@ -60,8 +60,8 @@ def run_script(script: bytes, train_csv: bytes, test_features_csv: bytes, rows: 
         if proc.returncode == 137:
             return RunResult(False, "OOM", f"killed at the {memory} memory cap", took, None, None)
         if proc.returncode != 0:
-            last = proc.stderr.decode(errors="replace").strip().splitlines()[-1:] or [""]
-            return RunResult(False, "Crash", f"exit {proc.returncode}: {last[0][:200]}", took, None, None)
+            # Never echo the script's own output: it has read the sealed test features, and run results are public.
+            return RunResult(False, "Crash", f"exit {proc.returncode}", took, None, None)
         out = work / "out" / "predictions.csv"
         if not out.exists():
             return RunResult(False, "BadOutputShape", "no /out/predictions.csv written", took, None, None)

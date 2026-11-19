@@ -96,3 +96,13 @@ def test_hostile_scripts_are_contained(script, reason):
     assert not r.ok
     if reason:
         assert r.reason == reason, (r.reason, r.detail)
+
+
+@needs_docker
+def test_script_output_never_reaches_the_public_result():
+    # A script that crashes with the sealed test features in its error message must not get them published.
+    leak = b"import sys; sys.exit(open('/data/test_features.csv').read()[:300])"
+    r = run_script(leak, TRAIN, TEST, 50, "classification", 2, timeout_s=60)
+    assert r.reason == "Crash"
+    first_row = TEST.decode().splitlines()[1]
+    assert first_row[:20] not in r.detail and r.detail.startswith("exit ")

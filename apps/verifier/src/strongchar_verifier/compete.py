@@ -152,7 +152,7 @@ class CompeteVerifier:
                 r = run_script(script, bundle["train"], bundle["features"].encode(), meta["rows"], meta["task"],
                                meta.get("classes"), timeout_s=meta.get("timeoutS", 600))
                 body = {"ok": r.ok, "predHash": "0x" + r.pred_hash.hex() if r.ok else None, "reason": r.reason,
-                        "detail": r.detail[:200], "runtimeS": round(r.runtime_s, 2)}
+                        "detail": r.detail[:200], "runtimeS": round(r.runtime_s)}  # whole seconds: less of a timing side channel
                 if r.ok:
                     (self.state / f"{cid}-{i}.json").write_text(json.dumps(r.predictions))
             self.coord.attest(run_topic, body)
