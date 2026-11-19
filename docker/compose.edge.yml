@@ -8,6 +8,7 @@ services:
       STRONGCHAR_HOST: 0.0.0.0
       STRONGCHAR_ALLOWED_ORIGINS: ${WEB_ORIGIN}
       STRONGCHAR_KEYSTORE: /run/secrets/coordinator-keys
+      STRONGCHAR_TRUSTED_PROXIES: "*" # no published ports: only Caddy reaches it
     volumes: ["coordinator-data:/data"]
     secrets: [coordinator-keys]
     read_only: true
