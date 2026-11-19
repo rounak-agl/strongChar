@@ -12,6 +12,7 @@ beru = "0x6Cd5aa3233E040080ab763a15b7c33ac0bC46D34"
 beru_faucet = "0xCF740c7D85C5E708cB8e3a64873aa4dB29Ba3b67"
 node_registry = "0x081138AA2ec962d7Fe583F3F135683D9C3B273f1"
 job_market = "0xa5FACae25c46bA115f4A157876dbFb67cF32EaDa"
+competitions = "0xF6EAb87db28e05F4Daf352D67e2845670F9325e6"
 deploy_block = 10338199
 
 [roles]

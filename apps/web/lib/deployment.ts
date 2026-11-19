@@ -5,6 +5,7 @@ export const deployment = {
   "beru_faucet": "0xCF740c7D85C5E708cB8e3a64873aa4dB29Ba3b67",
   "node_registry": "0x081138AA2ec962d7Fe583F3F135683D9C3B273f1",
   "job_market": "0xa5FACae25c46bA115f4A157876dbFb67cF32EaDa",
+  "competitions": "0xF6EAb87db28e05F4Daf352D67e2845670F9325e6",
   "deploy_block": 10338199,
   "coordinator": "0x2816Ae1c4998CBdc5F13F0c8d5b070e23ba8136e",
   "verifier_a": "0x519eDa168C5B95A06Fbd27AD464C583cd3E07286",
