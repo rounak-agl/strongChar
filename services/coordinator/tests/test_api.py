@@ -132,3 +132,18 @@ def test_coordinator_stores_only_ciphertext(world, tmp_path):
     root = tmp_path  # the Store in the fixture writes here
     assert any(root.rglob("*")), "nothing was stored"
     assert scan(root, [secret]) == []
+
+
+def test_admin_routes_are_off_without_a_token_and_need_the_exact_token(tmp_path, monkeypatch):
+    store = Store(tmp_path / "a")
+    nobody = ChainView(pq_key_of=lambda a: None, kem_key_of=lambda a: None, is_verifier=lambda a: False)
+    off = TestClient(create_app(store, nobody))
+    assert off.post("/v1/admin/jobs/1/pause").status_code == 403
+    monkeypatch.setenv("STRONGCHAR_ADMIN_TOKEN", "s3cret-admin")
+    on = TestClient(create_app(store, nobody))
+    assert on.post("/v1/admin/jobs/1/pause", headers={"x-admin-token": "wrong"}).status_code == 403
+    assert on.post("/v1/admin/jobs/1/pause", headers={"x-admin-token": "s3cret-admin"}).json()["paused"]
+    assert store.kv_get("paused/1") == "1"
+    store.kv_set("missed", '{"0xabc": 2}')
+    assert on.post("/v1/admin/nodes/0xABC/rearm", headers={"x-admin-token": "s3cret-admin"}).status_code == 200
+    assert store.kv_get("missed") == '{"0xabc": 0}'

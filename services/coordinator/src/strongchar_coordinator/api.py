@@ -1,7 +1,9 @@
 """Coordinator REST API: ciphertext-only blobs with recipient-only reads, drafts, signature relay, heartbeats."""
 
 
+import hmac
 import json
+import os
 import threading
 import time
 from collections import defaultdict, deque
@@ -82,6 +84,7 @@ class HeartbeatBody(BaseModel):
     cores: int = Field(ge=1, le=1024)
     benchmark_s: float = Field(gt=0, lt=3600)
     selftest: str = Field(max_length=80)
+    draining: bool = False  # the operator asked the node to stop: don't seat it
 
 
 def _bech32_of(evm: str) -> str:
@@ -306,6 +309,32 @@ def create_app(store: Store, chain: ChainView, allowed_origins: list[str] | None
     @app.get("/v1/nodes")
     def nodes() -> dict:
         return {"nodes": store.live_nodes()}
+
+    admin_token = os.environ.get("STRONGCHAR_ADMIN_TOKEN", "")
+
+    def admin(x_admin_token: Annotated[str, Header()] = "") -> None:
+        """Operator-only routes: off unless STRONGCHAR_ADMIN_TOKEN is set; compared in constant time."""
+        if not admin_token or not hmac.compare_digest(x_admin_token.encode(), admin_token.encode()):
+            raise HTTPException(403, "admin token required")
+
+    @app.post("/v1/admin/jobs/{job}/pause", dependencies=[Depends(admin)])
+    def pause(job: int) -> dict:
+        """Stop seating new rounds for a job (an open round still runs to settlement)."""
+        store.kv_set(f"paused/{job}", "1")
+        return {"job": job, "paused": True}
+
+    @app.post("/v1/admin/jobs/{job}/resume", dependencies=[Depends(admin)])
+    def resume(job: int) -> dict:
+        store.kv_set(f"paused/{job}", "")
+        return {"job": job, "paused": False}
+
+    @app.post("/v1/admin/nodes/{node}/rearm", dependencies=[Depends(admin)])
+    def rearm(node: str) -> dict:
+        """Clear a node's missed-commit count so a benched node can be seated again."""
+        missed = json.loads(store.kv_get("missed") or "{}")
+        missed[node.lower()] = 0
+        store.kv_set("missed", json.dumps(missed))
+        return {"node": node.lower(), "missed": 0}
 
     @app.get("/v1/jobs/{job}/matcher")
     def matcher(job: int) -> dict:

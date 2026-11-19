@@ -12,7 +12,10 @@ async function get<T>(path: string): Promise<T | null> {
 
 export type SealedBlob = { id: string; kind: string; size: number; created: number; pinned: boolean };
 export const sealed = () => get<{ blobs: SealedBlob[] }>("/v1/sealed");
-export const liveNodes = () => get<{ nodes: Record<string, { arch: string; benchmark_s: number; selftest: string; seen: number }> }>("/v1/nodes");
+export type Beat = { arch: string; cores: number; benchmark_s: number; selftest: string; seen: number; draining?: boolean };
+export const liveNodes = () => get<{ nodes: Record<string, Beat> }>("/v1/nodes");
+export type Matcher = { eligible: number; quorum: number; seated: string[]; blocked: Record<string, string>; at: number };
+export const matcher = (job: number) => get<Matcher>(`/v1/jobs/${job}/matcher`);
 export const draft = (specHash: string) => get<{ spec: Record<string, unknown>; manifest: Record<string, unknown> }>(`/v1/jobs/draft/${specHash}`);
 export const signatures = (job: number, round: number) =>
   get<{ signatures: { verifier: string; payloadHash: string; expiry: number; settlement: Record<string, unknown> }[] }>(`/v1/rounds/${job}/${round}/signatures`);

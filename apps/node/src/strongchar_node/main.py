@@ -8,6 +8,7 @@ import logging
 import os
 import platform
 import secrets
+import signal
 import threading
 import time
 from pathlib import Path
@@ -41,9 +42,10 @@ class Node:
         self.window = WindowManager(self.c.chain, self.actor.account, (self.c.dep.job_market,))
         self.verifiers = [self.c.dep.verifier_a, self.c.dep.verifier_b]
         self.cheat = cheat
-        self.state = state_dir or Path.home() / ".local/state/strongchar" / name
+        self.state = state_dir or Path.home() / ".local/state/strongchar" / name  # same as state_dir()
         self.state.mkdir(parents=True, exist_ok=True)
         self.addr = self.actor.evm.lower()
+        self.stopping = threading.Event()  # set by SIGTERM / `strongchar-node stop`: finish owed reveals, take no seat
 
     def publish(self) -> None:
         a = self.actor
@@ -54,7 +56,8 @@ class Node:
             try:
                 secs, h = benchmark()
                 self.coord.heartbeat({"version": "0.1.0", "arch": platform.machine(), "cores": os.cpu_count() or 1,
-                                      "benchmark_s": max(secs, 0.001), "selftest": h})
+                                      "benchmark_s": max(secs, 0.001), "selftest": h,
+                                      "draining": self.stopping.is_set()})
             except Exception:
                 log.exception("heartbeat failed")
             time.sleep(30)
@@ -62,8 +65,10 @@ class Node:
     def _state_path(self, job: int, rnd: int) -> Path:
         return self.state / f"{job}-{rnd}.json"
 
-    def step(self) -> None:
+    def step(self) -> bool:
+        """One pass over every job; returns True while this node still owes a reveal."""
         now = time.time()
+        owed = False
         for job in range(1, self.c.market.functions.jobCount().call() + 1):
             r = cv.current_round(self.c, job)
             if r is None or r.status != cv.ROUND_OPEN or self.addr not in r.roster:
@@ -71,14 +76,18 @@ class Node:
             seat = self.c.seat(job, r.round, self.addr)
             committed, revealed = bytes(seat[2]) != bytes(32), seat[3]
             path = self._state_path(job, r.round)
-            if not committed and now <= r.commit_deadline:
+            if not committed and now <= r.commit_deadline and not self.stopping.is_set():
                 self._train_and_commit(r, seat[0], path)
-            elif committed and not revealed and r.commit_deadline < now <= r.reveal_deadline and path.exists():
+                owed = True
+            elif committed and not revealed and now <= r.reveal_deadline and path.exists():
+                owed = True
+            if committed and not revealed and r.commit_deadline < now <= r.reveal_deadline and path.exists():
                 st = json.loads(path.read_text())
                 fn = self.c.market.functions.reveal(job, r.round, [bytes.fromhex(h) for h in st["hashes"]],
                                                     bytes.fromhex(st["salt"]))
                 rec = self.c.send(self.actor.account, fn, self.window)
                 log.info("job %s round %s revealed (%s)", job, r.round, rec.txhash)
+        return owed
 
     def _train_and_commit(self, r: cv.RoundView, slot: int, path: Path) -> None:
         feed = self._feed(r)
@@ -130,14 +139,31 @@ class Node:
                 log.warning("publishing card failed (%s); retrying", e)
                 time.sleep(5)
         threading.Thread(target=self.heartbeat_forever, daemon=True).start()
-        while True:
-            try:
-                self.step()
-            except TxReverted as e:
-                log.warning("%s", e)
-            except Exception:
-                log.exception("node step failed")
-            time.sleep(poll_s)
+        pid = self.state / "node.pid"
+        pid.write_text(str(os.getpid()))
+        signal.signal(signal.SIGTERM, lambda *_: self.stopping.set())
+        signal.signal(signal.SIGINT, lambda *_: self.stopping.set())
+        try:
+            while True:
+                owed = True
+                try:
+                    owed = self.step()
+                except TxReverted as e:
+                    log.warning("%s", e)
+                except Exception:
+                    log.exception("node step failed")
+                if self.stopping.is_set() and not owed:
+                    log.info("stopped: no reveal owed")
+                    return
+                if self.stopping.is_set():
+                    log.info("stopping after the reveal this node owes")
+                time.sleep(poll_s)
+        finally:
+            pid.unlink(missing_ok=True)
+
+
+def state_dir(name: str) -> Path:
+    return Path.home() / ".local/state/strongchar" / name
 
 
 def main() -> None:
@@ -154,11 +180,18 @@ def main() -> None:
     for cmd, text in (("init", "make this machine's node key (refuses to overwrite)"),
                       ("setup", "register keys on diana, take BERU, stake and join"),
                       ("doctor", "check everything the keeper checks before seating this node"),
-                      ("run", "train in every round this node is seated in")):
+                      ("run", "train in every round this node is seated in"),
+                      ("status", "stake, probation, earnings, and whether the node is running"),
+                      ("stop", "finish any reveal this node owes, then exit"),
+                      ("logs", "show this node's log"),
+                      ("claim", "withdraw the fUSD this node has earned")):
         sp = sub.add_parser(cmd, help=text)
         sp.add_argument("--name", default="node")
-        if cmd in ("doctor", "run"):
+        if cmd in ("doctor", "run", "status"):
             sp.add_argument("--coordinator", default=coord)
+        if cmd == "logs":
+            sp.add_argument("-n", type=int, default=40)
+            sp.add_argument("-f", "--follow", action="store_true")
         if cmd == "run":
             sp.add_argument("--cheat", action="store_true", help="demo only: reveal weights that were never trained")
     a = ap.parse_args(argv)
@@ -168,8 +201,22 @@ def main() -> None:
         setup.setup(a.name)
     elif a.cmd == "doctor":
         raise SystemExit(0 if setup.doctor(a.name, a.coordinator) else 1)
+    elif a.cmd == "status":
+        setup.status(a.name, a.coordinator, state_dir(a.name))
+    elif a.cmd == "stop":
+        setup.stop(state_dir(a.name))
+    elif a.cmd == "logs":
+        setup.logs(state_dir(a.name) / "node.log", a.n, a.follow)
+    elif a.cmd == "claim":
+        setup.claim(a.name)
     else:
-        logging.basicConfig(level=logging.INFO, format=f"%(asctime)s {a.name} %(message)s")
+        state_dir(a.name).mkdir(parents=True, exist_ok=True)
+        fmt = f"%(asctime)s {a.name} %(message)s"
+        logging.basicConfig(level=logging.INFO, format=fmt)
+        fh = logging.FileHandler(state_dir(a.name) / "node.log")
+        fh.setFormatter(logging.Formatter(fmt))
+        logging.getLogger().addHandler(fh)
+        logging.getLogger("httpx").setLevel(logging.WARNING)
         Node(a.name, a.coordinator, a.cheat).run()
 
 

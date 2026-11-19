@@ -24,7 +24,7 @@ contract JobMarketTest is Test {
     address owner = makeAddr("owner");
     address[4] nodes;
 
-    uint128 constant STAKE = 10e6;
+    uint128 constant STAKE = 20e6; // above MIN_STAKE (15 BERU), the floor for these small budgets
     uint256 constant BUDGET = 4_000_000;
     bytes32 constant W0 = keccak256("w0");
 
@@ -39,7 +39,7 @@ contract JobMarketTest is Test {
         faucet = new BeruFaucet(100e6, 1 days);
         beru = new BeruToken(address(faucet), address(this), 1e12, 5e11);
         faucet.setToken(address(beru));
-        registry = new NodeRegistry(address(beru));
+        registry = new NodeRegistry(address(beru), probation());
         market = new JobMarket(address(fusd), address(registry), coordinator, vA, vB);
         registry.setMarket(address(market));
 
@@ -62,6 +62,15 @@ contract JobMarketTest is Test {
 
     // ---------------------------------------------------------------- helpers
 
+    /// Seconds of verified work before a node is paid directly; 0 here, so these tests see plain equal pay.
+    function probation() internal pure virtual returns (uint64) {
+        return 0;
+    }
+
+    function refWork() internal pure virtual returns (uint32) {
+        return 0;
+    }
+
     function params(uint16 rounds) internal pure returns (JobMarket.JobParams memory p) {
         p.specHash = keccak256("spec");
         p.initialWeightsHash = W0;
@@ -73,6 +82,7 @@ contract JobMarketTest is Test {
         p.quorum = 2;
         p.maxNodes = 4;
         p.windows = JobMarket.Windows(100, 100, 100);
+        p.refWorkSecondsPerRound = refWork();
     }
 
     function newJob(uint16 rounds) internal returns (uint256 id) {
@@ -116,11 +126,11 @@ contract JobMarketTest is Test {
         for (uint256 i; i < n; i++) {
             commitFor(job, round, nodes[i], start);
         }
-        vm.warp(block.timestamp + 101);
+        vm.warp(vm.getBlockTimestamp() + 101);
         for (uint256 i; i < revealers; i++) {
             revealFor(job, round, nodes[i], start);
         }
-        vm.warp(block.timestamp + 100);
+        vm.warp(vm.getBlockTimestamp() + 100);
     }
 
     function settlement(uint8 outcome, uint32 slashed, address[] memory payees, uint256[] memory amounts)
@@ -167,7 +177,22 @@ contract JobMarketTest is Test {
 
     // ------------------------------------------------------------------ tests
 
-    function test_honestRoundPaysAndAdvancesWeights() public {
+    function test_stakeBelowTheFloorIsRefused() public {
+        JobMarket.JobParams memory p = params(1);
+        p.budget = 100e6; // floor = 2 * 100 / 1 round / quorum 2 = 100 BERU, above STAKE
+        vm.prank(owner);
+        vm.expectRevert(JobMarket.StakeTooLow.selector);
+        market.createJob(p);
+        assertEq(market.minStake(100e6, 1, 2), 100e6);
+        assertEq(market.minStake(BUDGET, 4, 2), market.MIN_STAKE()); // small jobs still need MIN_STAKE
+        p.budget = BUDGET;
+        p.stakePerNode = 14e6;
+        vm.prank(owner);
+        vm.expectRevert(JobMarket.StakeTooLow.selector);
+        market.createJob(p);
+    }
+
+    function test_honestRoundPaysAndAdvancesWeights() public virtual {
         uint256 job = newJob(2);
         open(job, 3);
         work(job, 1, 3, 3, W0);
@@ -397,5 +422,140 @@ contract JobMarketTest is Test {
         (bytes memory sa, bytes memory sb) = sigs(job, 1, s, expiry);
         vm.expectRevert(JobMarket.BadPayouts.selector);
         market.finalizeRound(job, 1, s, expiry, sa, sb);
+    }
+}
+
+
+/// Same suite with probation on: a node needs 2 s of verified work (2 paid rounds at 1 s each) before it is paid.
+contract ProbationTest is JobMarketTest {
+    function probation() internal pure override returns (uint64) {
+        return 2;
+    }
+
+    function refWork() internal pure override returns (uint32) {
+        return 1;
+    }
+
+    /// Under probation the plain honest round forfeits instead of paying, which the tests below cover.
+    function test_honestRoundPaysAndAdvancesWeights() public override {}
+
+    function pay(uint256 job, uint256 round, uint256 total) internal {
+        address[] memory p = new address[](3);
+        uint256[] memory a = new uint256[](3);
+        for (uint256 i; i < 3; i++) {
+            p[i] = nodes[i];
+            a[i] = total / 3;
+        }
+        a[0] += total % 3;
+        finalize(job, round, settlement(0, 0, p, a));
+    }
+
+    function budgetOf(uint256 job, uint256 round) internal view returns (uint256 b, uint256 drip) {
+        (JobMarket.Round memory r,) = market.getRound(job, round);
+        return (r.budget, r.drip);
+    }
+
+    function test_newNodesForfeitToThePoolThenGraduateAndShareIt() public {
+        uint256 job = newJob(3);
+        // Round 1: all on probation, so every share goes to the pool and each node is credited 1 s.
+        open(job, 3);
+        work(job, 1, 3, 3, W0);
+        (uint256 b1,) = budgetOf(job, 1);
+        pay(job, 1, b1);
+        assertEq(market.claimable(nodes[0]), 0);
+        assertEq(market.communityPool(), b1);
+        assertEq(registry.verifiedWorkSeconds(nodes[0]), 1);
+        assertEq(registry.graduatedAt(nodes[0]), 0);
+
+        // Round 2: still on probation when it opens, so it forfeits too; nodes graduate when it settles.
+        vm.warp(vm.getBlockTimestamp() + 1);
+        open(job, 3);
+        (uint256 b2, uint256 d2) = budgetOf(job, 2);
+        assertEq(d2, b1 / 10); // 10% of the pool is set aside at open
+        work(job, 2, 3, 3, keccak256("agg"));
+        pay(job, 2, b2); // nobody graduated yet, so the drip isn't paid out and returns to the pool
+        assertEq(market.communityPool(), b1 + b2);
+        assertTrue(registry.graduatedAt(nodes[0]) != 0);
+
+        // Round 3: graduated before it opened, so shares plus the drip are paid out directly.
+        vm.warp(vm.getBlockTimestamp() + 1);
+        open(job, 3);
+        (uint256 b3, uint256 d3) = budgetOf(job, 3);
+        assertEq(d3, (b1 + b2) / 10);
+        work(job, 3, 3, 3, keccak256("agg"));
+        pay(job, 3, b3 + d3);
+        assertEq(market.claimable(nodes[1]), (b3 + d3) / 3);
+        assertEq(market.communityPool(), b1 + b2 - d3);
+        // Every fUSD is accounted for: claims plus the pool equal what the owner paid in.
+        uint256 claims = market.claimable(nodes[0]) + market.claimable(nodes[1]) + market.claimable(nodes[2]);
+        assertEq(claims + market.communityPool(), BUDGET);
+        assertEq(fusd.balanceOf(address(market)), BUDGET);
+    }
+
+    function test_payoutsMustIncludeTheDripOnlyWhenSomeoneGraduated() public {
+        uint256 job = newJob(3);
+        open(job, 3);
+        work(job, 1, 3, 3, W0);
+        (uint256 b1,) = budgetOf(job, 1);
+        pay(job, 1, b1);
+        vm.warp(vm.getBlockTimestamp() + 1);
+        open(job, 3);
+        work(job, 2, 3, 3, keccak256("agg"));
+        (uint256 b2, uint256 d2) = budgetOf(job, 2);
+        address[] memory p = new address[](3);
+        uint256[] memory a = new uint256[](3);
+        for (uint256 i; i < 3; i++) {
+            p[i] = nodes[i];
+            a[i] = (b2 + d2) / 3;
+        }
+        a[0] += (b2 + d2) % 3;
+        JobMarket.Settlement memory s = settlement(0, 0, p, a);
+        uint64 expiry = uint64(block.number + 100);
+        (bytes memory sa, bytes memory sb) = sigs(job, 2, s, expiry);
+        vm.expectRevert(JobMarket.BadPayouts.selector); // all still on probation: no drip may be paid
+        market.finalizeRound(job, 2, s, expiry, sa, sb);
+    }
+
+    function test_aGraduatedNodeCannotBeStarved() public {
+        uint256 job = newJob(4);
+        for (uint256 r = 1; r <= 2; r++) {
+            vm.warp(vm.getBlockTimestamp() + 1);
+            open(job, 3);
+            work(job, r, 3, 3, r == 1 ? W0 : keccak256("agg"));
+            (uint256 b,) = budgetOf(job, r);
+            pay(job, r, b);
+        }
+        vm.warp(vm.getBlockTimestamp() + 1);
+        open(job, 3);
+        work(job, 3, 3, 3, keccak256("agg"));
+        (uint256 b3, uint256 d3) = budgetOf(job, 3);
+        address[] memory p = new address[](3);
+        uint256[] memory a = new uint256[](3);
+        p[0] = nodes[0];
+        p[1] = nodes[1];
+        p[2] = nodes[2];
+        a[2] = b3 / 2 / 3 - 1; // just under half an equal share
+        a[1] = (b3 + d3 - a[2]) / 2;
+        a[0] = b3 + d3 - a[2] - a[1];
+        JobMarket.Settlement memory s = settlement(0, 0, p, a);
+        uint64 expiry = uint64(block.number + 100);
+        (bytes memory sa, bytes memory sb) = sigs(job, 3, s, expiry);
+        vm.expectRevert(JobMarket.BadPayouts.selector);
+        market.finalizeRound(job, 3, s, expiry, sa, sb);
+    }
+
+    function test_aRevertedRoundReturnsItsDripToThePool() public {
+        uint256 job = newJob(3);
+        open(job, 3);
+        work(job, 1, 3, 3, W0);
+        (uint256 b1,) = budgetOf(job, 1);
+        pay(job, 1, b1);
+        vm.warp(vm.getBlockTimestamp() + 1);
+        open(job, 3);
+        (, uint256 d2) = budgetOf(job, 2);
+        assertEq(market.communityPool(), b1 - d2);
+        work(job, 2, 3, 3, keccak256("agg"));
+        finalize(job, 2, settlement(1, 0, new address[](0), new uint256[](0)));
+        assertEq(market.communityPool(), b1);
     }
 }

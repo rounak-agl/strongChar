@@ -16,6 +16,8 @@ contract JobMarket is ReentrancyGuardTransient {
     uint256 public constant MAX_NODES = 32; // the slashed bitmap is 32 bits wide
     uint256 public constant MAX_CHECKPOINTS = 64;
     uint256 public constant MISSED_REVEAL_BPS = 1000; // 10% of the job's stake per missed reveal
+    uint128 public constant MIN_STAKE = 15e6; // BERU base units every seat needs, however small the job
+    uint256 public constant DRIP_BPS = 1000; // each round may pay out 10% of the community pool
 
     enum JobStatus {
         None,
@@ -50,6 +52,7 @@ contract JobMarket is ReentrancyGuardTransient {
         uint8 quorum; // fewest revealed nodes a round needs
         uint8 maxNodes;
         Windows windows;
+        uint32 refWorkSecondsPerRound; // verified work credited per paid round (1 s = 1 Gop of training)
     }
 
     struct Job {
@@ -72,6 +75,8 @@ contract JobMarket is ReentrancyGuardTransient {
         bytes32 aggEvidenceHash;
         bytes32 payEvidenceHash;
         uint32 slashedBitmap;
+        uint256 drip; // taken from the community pool at open; paid to graduated payees or returned
+        uint64 openedAt;
     }
 
     struct Seat {
@@ -107,6 +112,8 @@ contract JobMarket is ReentrancyGuardTransient {
     mapping(uint256 => mapping(uint256 => address[])) private _roster;
     mapping(uint256 => mapping(uint256 => mapping(address => Seat))) private _seats;
     mapping(address => uint256) public claimable;
+    /// @notice fUSD forfeited by nodes on probation, dripped back to graduated nodes over later rounds.
+    uint256 public communityPool;
 
     error NotAuthorized();
     error BadInput();
@@ -119,6 +126,7 @@ contract JobMarket is ReentrancyGuardTransient {
     error SignatureExpired();
     error BadPayouts();
     error NothingToClaim();
+    error StakeTooLow();
 
     event JobCreated(uint256 indexed jobId, address indexed owner, uint256 budget, uint16 rounds, bytes32 specHash);
     event RoundOpened(
@@ -147,6 +155,9 @@ contract JobMarket is ReentrancyGuardTransient {
     event Slashed(uint256 indexed jobId, uint256 indexed roundId, address indexed node, uint256 amount, bool cheat);
     event JobClosed(uint256 indexed jobId, JobStatus status, uint256 refund);
     event Claimed(address indexed account, uint256 amount);
+    event Paid(uint256 indexed jobId, uint256 indexed roundId, address indexed node, uint256 amount);
+    event ForfeitedToPool(uint256 indexed jobId, uint256 indexed roundId, address indexed node, uint256 amount);
+    event PoolDripped(uint256 indexed jobId, uint256 indexed roundId, uint256 amount);
 
     constructor(address fusd_, address registry_, address coordinator_, address verifierA_, address verifierB_) {
         if (
@@ -166,7 +177,10 @@ contract JobMarket is ReentrancyGuardTransient {
         if (
             p.rounds == 0 || p.quorum == 0 || p.maxNodes < p.quorum || p.maxNodes > MAX_NODES || p.budget == 0
                 || p.windows.commit == 0 || p.windows.reveal == 0 || p.windows.finalize == 0
+                || p.refWorkSecondsPerRound > p.windows.commit
         ) revert BadInput();
+        // Cheating must cost more than it could ever earn: a seat's stake covers twice its share of a round.
+        if (p.stakePerNode < minStake(p.budget, p.rounds, p.quorum)) revert StakeTooLow();
         jobId = ++jobCount;
         _params[jobId] = p;
         _jobs[jobId] = Job(msg.sender, JobStatus.Active, 0, p.budget, p.initialWeightsHash);
@@ -213,7 +227,12 @@ contract JobMarket is ReentrancyGuardTransient {
         r.finalizeBy = r.revealDeadline + p.windows.finalize;
         r.budget = j.remaining / (p.rounds - roundId + 1);
         r.startWeightsHash = j.weights;
+        r.openedAt = t;
         j.remaining -= r.budget;
+        // Capped by the round budget so many tiny jobs can't drain the pool faster than their own size.
+        uint256 drip = communityPool * DRIP_BPS / 10_000;
+        r.drip = drip < r.budget ? drip : r.budget;
+        communityPool -= r.drip;
         emit RoundOpened(
             jobId, roundId, nodes, shards, r.startWeightsHash, r.commitDeadline, r.revealDeadline, r.finalizeBy, r.budget
         );
@@ -283,6 +302,7 @@ contract JobMarket is ReentrancyGuardTransient {
         } else {
             if (st.payouts.length != 0) revert BadPayouts();
             j.remaining += r.budget; // nothing earned: the round's budget goes back to the job
+            communityPool += r.drip;
             r.aggregateHash = r.startWeightsHash;
             r.status = RoundStatus.Reverted;
         }
@@ -321,6 +341,15 @@ contract JobMarket is ReentrancyGuardTransient {
     }
 
     // ----------------------------------------------------------------- views
+
+    /// @notice The least BERU a seat may stake: twice one node's share of a quorum round, and never under MIN_STAKE.
+    /// @dev Budgets are fUSD and stakes BERU, both six decimals; the floor counts them one to one.
+    function minStake(uint256 budget, uint16 rounds, uint8 quorum) public pure returns (uint128) {
+        if (rounds == 0 || quorum == 0) revert BadInput();
+        uint256 s = 2 * budget / rounds / quorum;
+        if (s > type(uint128).max) revert BadInput();
+        return s > MIN_STAKE ? uint128(s) : MIN_STAKE;
+    }
 
     /// @dev Computed per call so it follows block.chainid after a fork.
     function domain() public view returns (bytes32) {
@@ -379,26 +408,48 @@ contract JobMarket is ReentrancyGuardTransient {
         if (!PQ.verify(PQ.requireProven(verifierB), sigB, message)) revert BadSignature();
     }
 
+    /// @dev Payouts must sum to the round budget plus the drip (the drip only when a graduated node is paid).
+    ///      A node still on probation when the round opened forfeits its amount to the community pool; a
+    ///      graduated node must get at least half an equal share, so the verifiers can't starve one payee.
     function _pay(uint256 jobId, uint256 roundId, Round storage r, Settlement calldata st) private {
+        uint256 n = st.payouts.length;
+        if (n == 0) revert BadPayouts();
+        uint256 floor = r.budget / 2 / n;
+        uint32 credit = _params[jobId].refWorkSecondsPerRound;
         uint256 total;
+        bool anyGraduated;
         address previous;
-        for (uint256 i; i < st.payouts.length; i++) {
+        for (uint256 i; i < n; i++) {
             address node = st.payouts[i].node;
+            uint256 amount = st.payouts[i].amount;
             Seat storage s = _seats[jobId][roundId][node];
             // Ascending order makes duplicates impossible; payees must have revealed and not been slashed.
             if (uint160(node) <= uint160(previous) || !s.revealed || (st.slashedBitmap >> s.slot) & 1 == 1) {
                 revert BadPayouts();
             }
             previous = node;
-            total += st.payouts[i].amount;
-            claimable[node] += st.payouts[i].amount;
+            total += amount;
+            if (registry.graduatedBefore(node, r.openedAt)) {
+                if (amount < floor) revert BadPayouts();
+                anyGraduated = true;
+                claimable[node] += amount;
+                emit Paid(jobId, roundId, node, amount);
+            } else {
+                communityPool += amount;
+                emit ForfeitedToPool(jobId, roundId, node, amount);
+            }
+            if (credit > 0) registry.creditWork(node, jobId, roundId, credit);
         }
-        if (total != r.budget || st.payouts.length == 0) revert BadPayouts();
+        uint256 drip = anyGraduated ? r.drip : 0;
+        if (total != r.budget + drip) revert BadPayouts();
+        if (drip > 0) emit PoolDripped(jobId, roundId, drip);
+        communityPool += r.drip - drip; // an undripped drip waits in the pool
     }
 
     function _unsettled(uint256 jobId, uint256 roundId, RoundStatus status) private {
         Round storage r = _rounds[jobId][roundId];
         _jobs[jobId].remaining += r.budget;
+        communityPool += r.drip;
         r.aggregateHash = r.startWeightsHash;
         r.status = status;
         emit RoundClosedWithoutSettlement(jobId, roundId, status);

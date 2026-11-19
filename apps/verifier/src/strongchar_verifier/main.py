@@ -125,9 +125,14 @@ class Verifier:
             log.info("job %s round %s node %s: %s", r.job, r.round, node, verdict.value)
         xv, yv = work.open_val(self.c.chain, self.coord, self.actor.seal, contract, r.job, draft, self.verifiers)
         gate = spec.raw["gate"]
+        # Probation and the pool drip come from the chain as of the round's opening, so both verifiers agree.
+        rnd, _ = self.c.round(r.job, r.round)
+        drip, opened_at = rnd[11], rnd[12]
+        graduated = {cv.checksum(n): self.c.registry.functions.graduatedBefore(cv.checksum(n), opened_at).call()
+                     for n in r.roster}
         fin = finalize(r.job, r.round, spec.hash, start, [(cv.checksum(n), shard_of[n]) for n in r.roster],
                        revealed, failed, lambda w: wl.evaluate(w, xv, yv)[0], r.budget,
-                       float(gate["relTol"]), float(gate["absTol"]))
+                       float(gate["relTol"]), float(gate["absTol"]), graduated, drip)
         s = fin.settlement
         last = r.round == r.params[6]
         result = fin.weights  # merged when accepted, the start weights when reverted
