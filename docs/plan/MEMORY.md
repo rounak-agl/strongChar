@@ -137,6 +137,8 @@ The project's running log. Update at the end of every working session. Newest lo
 - Phase 4 started (19 Nov): Next.js 16 app (apps/web) with the earlier dark warm-black look restyled with a teal seal accent; server-rendered pages read the chain (viem) and the coordinator directly: landing with live counters, jobs, job detail (sealed inputs, round timeline with per-node replay verdicts, PQ-verified stamp linking the settlement tx, slashes), nodes (stake, heartbeat, bit-exact self-test), what the server sees, how it works, competitions placeholder. Strict CSP and headers. Typecheck and production build green; all pages verified against job 1 on diana.
 - Remaining Phase 4: wallet flows (QoreX + SIWQ, key setup, post job with in-browser sealing, enter competition) wait for Q16 (how QoreX holds ML-KEM keys): workshop 20 Nov 16:30 UTC.
 - Next: competition pages once Competitions is deployed; side entry (Phase 5) scaffold.
+- P6.1 files merged (#12): one service image (builds and runs read-only as uid 10002), compose per server, per-actor key files (`ops/split_keys.py`, mode 600, owned by 10002), `ops/up.sh` (refuses loose key files, builds the sandbox image on the verifiers server). The coordinator trusts its reverse proxy for client addresses (no published ports) and sends no server header.
+- Blocked: running the stack on the three servers needs Session Manager / the AWS tool, and it puts service mnemonics on the servers. Waiting for Rounak.
 
 ### 2026-11-18
 - Researched the event, past winners and similar projects. Category and scope decided (D1–D13).
