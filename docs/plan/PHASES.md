@@ -92,8 +92,8 @@ Cut line (cut item 1, first to go): if behind on 26 Nov evening, competitions be
 Tasks
 - [x] P4.1 (19 Nov) Visual style: palette, type, mark (DESIGN section 2).
 - [ ] P4.2 Next.js app with `create-qorechain-dapp` packages; QoreX RainbowKit connector; SIWQ.
-- [ ] P4.3 Tokens, fonts, signature components (`SealChip`, `ProofStamp`, `WindowMeter`, `RoundTimeline`, `KeyCard`, `SandboxReport`, `Leaderboard`).
-- [ ] P4.4 `/start` key setup flow (with KEM key backup per S3); `/jobs` flows with client-side sealing and final-model opening; `/compete` flows with client-side script sealing; `/sealed`; landing; profile; `/how`. Chain fallback when the API is down.
+- [~] P4.3 (19 Nov: tokens, fonts, `SealChip`, `ProofStamp`, `RoundTimeline` done; `WindowMeter`, `KeyCard`, `SandboxReport`, `Leaderboard` pending) Tokens, fonts, signature components (`SealChip`, `ProofStamp`, `WindowMeter`, `RoundTimeline`, `KeyCard`, `SandboxReport`, `Leaderboard`).
+- [~] P4.4 (19–20 Nov: read-only `/jobs`, `/jobs/[id]`, `/nodes`, `/compete`, `/compete/[id]`, `/sealed`, `/how`, landing on live data, with event reads in 10k-block windows; wallet flows wait on Q16) `/start` key setup flow (with KEM key backup per S3); `/jobs` flows with client-side sealing and final-model opening; `/compete` flows with client-side script sealing; `/sealed`; landing; profile; `/how`. Chain fallback when the API is down.
 - [ ] P4.5 Playwright smoke run with the QoreX mock wallet.
 
 Exit check: from a fresh browser profile, a person can sign in, set up keys, post and fund a sealed job, watch it settle, open the model, host a competition and submit an entry, all against diana.
@@ -111,10 +111,10 @@ Cut line (cut item 5): if the main entry isn't through Phase 4 exit by 28 Nov ev
 
 ## Phase 6. Ship (29 Nov–1 Dec)
 
-- [ ] P6.1 Both VMs: `docker compose up`, TLS on the sslip.io hostname, health checks, restart policies, log rotation; Vercel deploy.
+- [~] P6.1 (19–20 Nov: one service image, per-server compose files, per-service key files, `ops/split_keys.py`, `ops/up.sh`, proxy headers; rollout on the VMs and Vercel pending Rounak) Both VMs: `docker compose up`, TLS on the sslip.io hostname, health checks, restart policies, log rotation; Vercel deploy.
 - [ ] P6.2 Self-scan of our own edge host only (httpx, nuclei, ffuf): no exposed admin routes, debug pages or default files; fix findings.
 - [ ] P6.3 Run one fresh job and one fresh competition on the live stack; keep them visible for judges.
-- [ ] P6.4 README (what, why, trust model, how it's made, credits, run it, tx hashes, gas figures, limits), THREAT_MODEL.md, AI_USAGE.md final pass, docs/how-it-works.md.
+- [~] P6.4 (20 Nov: THREAT_MODEL.md written and linked from the README; AI_USAGE.md current; README final pass and docs/how-it-works.md pending) README (what, why, trust model, how it's made, credits, run it, tx hashes, gas figures, limits), THREAT_MODEL.md, AI_USAGE.md final pass, docs/how-it-works.md.
 - [ ] P6.5 Cover image 1600×900.
 - [ ] P6.6 Video ≤3:00, recorded against live testnet:
   - 0:00–0:20 hook: data that trains AI today is readable after Q-Day.
