@@ -1,6 +1,7 @@
 // Server-side chain reads over viem: jobs, rounds, seats, settlements (with their tx hashes) and nodes.
 import { createPublicClient, defineChain, http, type Address, type Hex } from "viem";
 import { deployment, jobMarketAbi, nodeRegistryAbi } from "./deployment";
+import { events } from "./logs";
 
 export const diana = defineChain({
   id: 9800,
@@ -16,7 +17,6 @@ export const explorerAddr = (a: string) => `https://explore.qore.network/address
 
 const market = deployment.job_market as Address;
 const registry = deployment.node_registry as Address;
-const FROM = BigInt(deployment.deploy_block);
 
 export const ROUND_STATUS = ["None", "Open", "Settled", "Reverted", "Void", "Expired"] as const;
 export const JOB_STATUS = ["None", "Active", "Completed", "Cancelled"] as const;
@@ -65,9 +65,9 @@ export type TxRef = { round: number; tx: Hex; block: bigint };
 export async function jobEvents(job: number): Promise<{ settled: TxRef[]; opened: TxRef[]; slashed: { round: number; node: Address; amount: bigint; tx: Hex }[] }> {
   const args = { jobId: BigInt(job) };
   const [settled, opened, slashed] = await Promise.all([
-    client.getContractEvents({ address: market, abi: jobMarketAbi, eventName: "RoundSettled", args, fromBlock: FROM }),
-    client.getContractEvents({ address: market, abi: jobMarketAbi, eventName: "RoundOpened", args, fromBlock: FROM }),
-    client.getContractEvents({ address: market, abi: jobMarketAbi, eventName: "Slashed", args, fromBlock: FROM }),
+    events(market, jobMarketAbi, "RoundSettled", args),
+    events(market, jobMarketAbi, "RoundOpened", args),
+    events(market, jobMarketAbi, "Slashed", args),
   ]);
   const ref = (e: any): TxRef => ({ round: Number(e.args.roundId), tx: e.transactionHash, block: e.blockNumber });
   return {
@@ -79,7 +79,7 @@ export async function jobEvents(job: number): Promise<{ settled: TxRef[]; opened
 export type NodeInfo = { address: Address; stake: bigint; busyJob: number };
 
 export async function nodes(): Promise<NodeInfo[]> {
-  const joined = await client.getContractEvents({ address: registry, abi: nodeRegistryAbi, eventName: "NodeJoined", fromBlock: FROM });
+  const joined = await events(registry, nodeRegistryAbi, "NodeJoined");
   return Promise.all(joined.map(async (e: any) => {
     const n = (await client.readContract({ address: registry, abi: nodeRegistryAbi, functionName: "getNode", args: [e.args.node] })) as any;
     return { address: e.args.node, stake: n.stake, busyJob: Number(n.busyJob) };
