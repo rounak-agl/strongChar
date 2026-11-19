@@ -36,6 +36,10 @@ Live check after deploy: two real ML-DSA-87 signatures from the registered verif
 5. The final model was sealed to the owner only and opened locally: holdout accuracy **0.310 → 0.777** on rows that never left the owner. Honest nodes claimed their fUSD; node-4 lost its 200 BERU stake and earned nothing.
 6. `python -m strongchar_coordinator.audit` over everything the coordinator stored: no plaintext.
 
+## Security
+
+What is protected, from whom, and where it stops: [THREAT_MODEL.md](THREAT_MODEL.md).
+
 ## Credits
 
 Built with these open-source projects and QoreChain kits:
