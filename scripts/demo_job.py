@@ -35,6 +35,8 @@ def main() -> None:
     ap.add_argument("--rounds", type=int, default=2)
     ap.add_argument("--budget", type=int, default=20_000, help="fUSD base units (6 decimals)")
     ap.add_argument("--rows", type=int, default=8_000)
+    ap.add_argument("--shards", type=int, default=4, help="training shards; the keeper seats up to this many nodes")
+    ap.add_argument("--quorum", type=int, default=3, help="fewest nodes a round may run with")
     a = ap.parse_args()
 
     c = Contracts()
@@ -44,44 +46,43 @@ def main() -> None:
     coord.put_card(make_card(owner_actor.qor, owner_actor.seal, owner.private_key, owner.pqc.secret_key))
     contract = c.dep.job_market
     verifiers = [c.dep.verifier_a, c.dep.verifier_b]
-    nodes = [keystore.load(n).evm for n in NODES]
 
     raw = from_csv(presets.health_csv(a.rows))
-    sp = split(raw.card.rows, len(nodes), "0.1", "0.1")
+    sp = split(raw.card.rows, a.shards, "0.1", "0.1")
     data = standardise(raw, sp.train)
     pieces = cut(data, sp)
     spec = make_spec(dataset_hash=data.card.hash, d_in=data.card.x_shape[0], n_out=data.card.classes, task=data.card.task,
                      shards=list(sp.shards), val=sp.val, rounds=a.rounds)
     job_id = c.market.functions.jobCount().call() + 1  # bound into every AAD; checked again after createJob
 
+    # Shards are sealed to the two verifiers only. Nodes are picked per round from whoever is online, and a verifier
+    # re-seals each seated node's shard to it when the round opens.
     shard_ids, shard_hashes = [], []
+    recips, keys = zip(*(recipient(c.chain, coord, w) for w in verifiers))
     for i, blob in enumerate(pieces["train"]):
-        who = [nodes[i], *verifiers]
-        recips, keys = zip(*(recipient(c.chain, coord, w) for w in who))
         aad = seal.aad(contract, job_id, 0, i, Kind.SHARD, list(keys))
         shard_ids.append(coord.put_blob(seal.seal(list(recips), blob, Kind.SHARD, aad), "shard"))
         shard_hashes.append("0x" + keccak(blob).hex())
-    recips, keys = zip(*(recipient(c.chain, coord, w) for w in verifiers))
     val_blob = pieces["val"][0]
     val_id = coord.put_blob(seal.seal(list(recips), val_blob, Kind.VAL, seal.aad(contract, job_id, 0, 0, Kind.VAL, list(keys))), "val")
-    manifest = {"shards": shard_ids, "shardHashes": shard_hashes, "val": val_id, "valHash": "0x" + keccak(val_blob).hex(),
-                "assignment": nodes}
+    manifest = {"shards": shard_ids, "shardHashes": shard_hashes, "val": val_id, "valHash": "0x" + keccak(val_blob).hex()}
     sh = coord.put_draft(spec.raw, manifest)
     assert sh == "0x" + spec.hash.hex(), "coordinator computed a different spec hash"
-    print(f"sealed {len(shard_ids)} shards (each to its node + both verifiers) and the validation split; spec {sh[:18]}…")
+    print(f"sealed {len(shard_ids)} shards (to both verifiers only) and the validation split; spec {sh[:18]}…")
 
     ensure_fusd(c, owner, a.budget)
     w = WindowManager(c.chain, owner, (c.dep.fusd, contract))
     c.send(owner, c.fusd.functions.approve(contract, a.budget), w)
     params = (spec.hash, spec.initial_weights_hash(), enc.shard_table_hash(spec.shards),
               keccak(b"".join(bytes.fromhex(h[2:]) for h in [*shard_hashes, manifest["valHash"]])),
-              a.budget, STAKE, a.rounds, 3, len(nodes), (240, 180, 1200))
+              a.budget, STAKE, a.rounds, a.quorum, a.shards, (240, 180, 1200))
     r = c.send(owner, c.market.functions.createJob(params), w)
     created = c.market.functions.jobCount().call()
     assert created == job_id, f"another job took id {job_id}; rerun"
     print(f"job {job_id} created and funded with {a.budget / 1e6} fUSD: {r.txhash}")
     c.chain.close_window(owner)
 
+    NAME = {keystore.load(n).evm.lower(): n for n in NODES}
     seen = set()
     while True:
         params_, js = c.job(job_id)
@@ -90,8 +91,9 @@ def main() -> None:
             key = (rnd, rv[0])
             if key not in seen:
                 seen.add(key)
+                names = [NAME.get(n.lower(), n[:10]) for n in roster]
                 print(f"round {rnd}: status {['-', 'Open', 'Settled', 'Reverted', 'Void', 'Expired'][rv[0]]}, "
-                      f"revealed {rv[1]}, slashed bitmap {rv[10]:#06b}")
+                      f"seated {names}, revealed {rv[1]}, slashed bitmap {rv[10]:#06b}")
         if js[1] != cv.JOB_ACTIVE:
             break
         time.sleep(10)

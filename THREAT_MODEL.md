@@ -7,7 +7,7 @@ deployed on QoreChain testnet `diana` (chain ID 9800).
 
 | Asset | Who may read it |
 |---|---|
-| A data owner's training shards | The node assigned to the shard and the two verifiers |
+| A data owner's training shards | The two verifiers, and each node seated on that shard for the rounds it trains it |
 | The validation split | The two verifiers |
 | The trained model | The data owner |
 | A competition's test features and hidden labels | The two verifiers until the deadline; labels are public after the reveal |
@@ -25,7 +25,9 @@ competition's training set and the predictions of valid entries.
   verifiers must sign every settlement, validity verdict and score table, so one honest verifier blocks a false result.
   Each verifier can read everything sealed to it.
 - **A node reads its own shard.** It can't train on data it can't read. Sealing limits who reads a shard; it doesn't
-  hide the shard from the machine doing the work.
+  hide the shard from the machine doing the work. Nodes are seated per round, so over a long job more than one node
+  may train, and read, the same shard. Owners seal shards to the verifiers, which re-seal each round's shard to the
+  seated node only; the node checks the bytes against the owner's committed hash, so a verifier can't swap the data.
 - **The coordinator is untrusted for secrecy and correctness.** It stores ciphertext, relays signatures and serves
   metadata. It holds no decryption key and can't produce a signature the contracts accept. It can refuse service.
 

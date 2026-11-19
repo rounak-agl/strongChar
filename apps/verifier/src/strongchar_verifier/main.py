@@ -51,7 +51,12 @@ class Verifier:
         now = time.time()
         for job in range(1, self.c.market.functions.jobCount().call() + 1):
             r = cv.current_round(self.c, job)
-            if r is None or r.status != cv.ROUND_OPEN or now <= r.reveal_deadline + 2 or now > r.finalize_by:
+            if r is None or r.status != cv.ROUND_OPEN or now > r.finalize_by:
+                continue
+            if now <= r.commit_deadline:
+                self._feed(r)
+                continue
+            if now <= r.reveal_deadline + 2:
                 continue
             if r.revealed < r.params[7]:
                 continue  # the keeper voids it
@@ -61,6 +66,38 @@ class Verifier:
                 sigs = self.coord.signatures(job, r.round)
             self._submit_if_ready(r, sigs)
 
+    def _feed(self, r: cv.RoundView) -> None:
+        """Re-seal each seated node's shard, and the start weights after round 1, to that node alone.
+
+        Both verifiers feed every round, so one being down doesn't stall training; a node takes whichever feed
+        arrives first and checks it against the owner's shard hashes and the round's start hash.
+        """
+        topic = work.feed_topic(r.job, r.round)
+        if any(f["author"] == self.addr for f in self.coord.attestations(topic)):
+            return
+        draft = self.coord.get_draft(r.spec_hash_hex)
+        spec = JobSpec(draft["spec"])
+        contract = self.c.dep.job_market
+        settled = cv.settled_rounds(self.c, r.job, r.round)
+        start = work.start_weights(spec, r.start_hash, self.c.chain, self.coord, self.actor.seal, contract, r.job,
+                                   settled)
+        first = r.start_hash == work.weights_hash(spec.hash, spec.initial_weights())
+        fed = {}
+        for node, shard in cv.shard_of(self.c, r.job, r.round).items():
+            rec, kem = recipient(self.c.chain, self.coord, node)
+            data = work.shard_bytes(self.c.chain, self.coord, self.actor.seal, contract, r.job, draft, shard,
+                                    self.verifiers)
+            entry = {"shard": shard, "shardBlob": self.coord.put_blob(
+                seal.seal([rec], data, Kind.SHARD, work.feed_aad(contract, r.job, r.round, shard, Kind.SHARD, kem)),
+                Kind.SHARD.value), "weightsBlob": None}
+            if not first:
+                entry["weightsBlob"] = self.coord.put_blob(seal.seal(
+                    [rec], work.weights_blob(spec, start), Kind.GLOBAL,
+                    work.feed_aad(contract, r.job, r.round, shard, Kind.GLOBAL, kem)), Kind.GLOBAL.value)
+            fed[node] = entry
+        self.coord.attest(topic, {"nodes": fed})
+        log.info("job %s round %s fed %s nodes their shards", r.job, r.round, len(fed))
+
     def _settle_and_sign(self, r: cv.RoundView) -> None:
         draft = self.coord.get_draft(r.spec_hash_hex)
         spec = JobSpec(draft["spec"])
@@ -69,7 +106,7 @@ class Verifier:
         settled = cv.settled_rounds(self.c, r.job, r.round)
         start = work.start_weights(spec, r.start_hash, self.c.chain, self.coord, self.actor.seal, contract, r.job,
                                    settled)
-        assignment = [a.lower() for a in draft["manifest"]["assignment"]]
+        shard_of = cv.shard_of(self.c, r.job, r.round)
         dom = self.c.domain()
         revealed, failed = {}, {}
         for node in r.roster:
@@ -77,7 +114,7 @@ class Verifier:
             if not seat[3]:
                 continue
             claimed = bytes(seat[4])
-            shard = assignment.index(node)
+            shard = shard_of[node]
             start_row, x, y = work.open_shard(self.c.chain, self.coord, self.actor.seal, contract, r.job, draft,
                                               shard, self.verifiers)
             replayed, _ = work.train(spec, dom, r.job, shard, start_row, x, y, start, len(settled))
@@ -88,7 +125,7 @@ class Verifier:
             log.info("job %s round %s node %s: %s", r.job, r.round, node, verdict.value)
         xv, yv = work.open_val(self.c.chain, self.coord, self.actor.seal, contract, r.job, draft, self.verifiers)
         gate = spec.raw["gate"]
-        fin = finalize(r.job, r.round, spec.hash, start, [(cv.checksum(n), assignment.index(n)) for n in r.roster],
+        fin = finalize(r.job, r.round, spec.hash, start, [(cv.checksum(n), shard_of[n]) for n in r.roster],
                        revealed, failed, lambda w: wl.evaluate(w, xv, yv)[0], r.budget,
                        float(gate["relTol"]), float(gate["absTol"]))
         s = fin.settlement
@@ -98,7 +135,7 @@ class Verifier:
             recips = [r.job_state[0]]  # the final model is sealed to the data owner only
             kind = Kind.MODEL
         else:
-            recips = [*draft["manifest"]["assignment"], *self.verifiers]
+            recips = list(self.verifiers)  # the next round's nodes get their copy through that round's feed
             kind = Kind.GLOBAL
         recipients, keys = zip(*(recipient(self.c.chain, self.coord, a) for a in recips))
         aad = work.global_aad(contract, r.job, r.round, list(keys), last)

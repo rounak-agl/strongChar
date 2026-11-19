@@ -148,14 +148,17 @@ Rules:
 Browser (owner)                 Coordinator (edge)       Node i (worker)        Verifier a / b (worker)   Chain
 ───────────────                 ──────────────────       ───────────────        ───────────────────────   ─────
 canonicalise CSV/MNIST
-shard; seal shard i to
-{node i, ver a, ver b};
-seal val split to {a, b}
+shard; seal every shard
+and the val split to
+{ver a, ver b} only
 upload ciphertext ───────────►  store blobs (ct only)
 createJob + fund (window) ───────────────────────────────────────────────────────────────────────────►  JobCreated
+                                pick fastest live nodes,
                                 openRound ───────────────────────────────────────────────────────────►  RoundOpened
-                                                         fetch ct (signed req)
-                                                         open shard
+                                                                                re-seal shard i (+ start
+                                                                                weights) to {node i} ──►  feed
+                                                         fetch feed ct
+                                                         open, check hashes
                                                          exact-train K steps
                                                          commit ─────────────────────────────────────►  Committed
                                                          reveal; seal weights
@@ -166,7 +169,7 @@ createJob + fund (window) ──────────────────
                                                                                 ML-DSA sign verdict ──►  pqcVerify ✓
                                                                                 ML-DSA sign settlement►  pqcVerify ✓ ×2
                                                                                 seal new global weights
-                                                                                to next round's set ──►  store ct
+                                                                                to {a, b} ──────────►  store ct
                                                                                                          Settled / Slashed
 last round: global weights sealed to {owner}
 open in the browser, evaluate on the owner's held-out split
@@ -174,7 +177,7 @@ open in the browser, evaluate on the owner's held-out split
 
 Design decisions:
 - **D1. The coordinator never decrypts.** Merge and gate run on both verifiers, which must produce identical merged bytes (the merge is deterministic). The coordinator schedules, stores ciphertext and relays.
-- **D2. One envelope per shard, multi-recipient.** QoreSeal multi-recipient envelopes to exactly {node, verifier a, verifier b}. Group epoch keys (`EpochKeyManager`) for per-round global weights shared by many recipients. AAD binds `chainId | contract | jobId | round | shardIdx | kind | recipientSetHash`.
+- **D2. Owners seal to the verifiers; verifiers feed each round.** The owner seals each shard to {verifier a, verifier b} only, because nodes are picked per round from whoever is online. When a round opens, each verifier re-seals every seated node's shard (and the start weights after round 1) to that node alone and posts the blob ids as the round's feed. The node checks the shard against the owner's committed hash and the weights against the round's start hash, so a verifier can't swap data; it learns nothing it couldn't already read. Group epoch keys (`EpochKeyManager`) for per-round global weights shared by many recipients. AAD binds `chainId | contract | jobId | round | shardIdx | kind | recipientSetHash`.
 - **D3. Commitments are over plaintext hashes, storage is ciphertext.** The chain stores the ciphertext hash next to each commitment so the UI can show "this ciphertext ↔ this commitment".
 - **D4. Cheating node.** node-4 skips training and returns nudged weights; caught as `ReplayMismatch`, reported by both verifiers, slashed at settlement.
 
@@ -197,7 +200,7 @@ The coordinator is a keeper and a switchboard. It never holds a decryption key a
 
 ### Node selection (benchmark-ranked)
 
-A node is eligible for a job's next round when it is joined, staked at least `stakePerNode`, heartbeated in the last 60 s, not busy, passing the workload's self-test, not benched (2 missed commits in a row), has a possession-proven ML-DSA key and a bound KEM key, and its benchmark is under the speed floor. Eligible nodes are ranked by benchmark (fastest first), then longest-idle, then a seed-derived tiebreak; one seat per owner; shards used longest ago go first. The benchmark is a fixed exact-kernel training run of known size, timed by the node and spot-checked by the verifiers against the round's actual commit time. The floor is set from measurements (Q15). When a job can't seat a quorum, the API reports how many nodes were blocked and why. Cut line: plain eligibility plus longest-idle (PRD 5.5).
+Nodes are chosen per round from the whole live fleet, never fixed when the job is created (D45). A node is eligible for a job's next round when it is joined, staked at least `stakePerNode`, heartbeated in the last 60 s, not busy, passing the workload's self-test, not benched (2 missed commits in a row), has a possession-proven ML-DSA key and a bound KEM key, and its benchmark is under the speed floor. Eligible nodes are ranked by benchmark (fastest first), then longest-idle, then a per-round hash tiebreak; one seat per node address; up to `min(maxNodes, shards)` seats; shards used longest ago go first; the job whose next round pays most is seated first, and a node seated for one job is busy for the rest of that tick. The benchmark is the timed exact-kernel self-test, reported in each heartbeat (the verifier spot-check against commit times is not built). The floor is set from measurements (Q15). When a job can't seat a quorum, the API reports how many nodes were blocked and why. Cut line: plain eligibility plus longest-idle (PRD 5.5).
 
 ## 8. Coordinator API
 
