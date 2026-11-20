@@ -1,7 +1,9 @@
-// Competitions: every one on diana with its prize, phase and entry count.
-import Link from "next/link";
-import { Badge, Card, Empty } from "@/components/ui";
-import { fmt6 } from "@/lib/chain";
+// Competitions: each one as an index card with its own mosaic poster, its phase, prize and entry count.
+import { Trophy } from "lucide-react";
+import { Page } from "@/components/page";
+import { Pill } from "@/components/primitives";
+import { Empty, PosterLink } from "@/components/client";
+import { formatToken } from "@/lib/money";
 import { competitionCount, competitionsDeployed, getCompetition, getEntries, meta, phase } from "@/lib/compete";
 
 export const metadata = { title: "Competitions" };
@@ -15,31 +17,20 @@ export default async function Compete() {
     return { c, entries, m };
   }));
   return (
-    <div className="space-y-6">
-      <div className="max-w-2xl space-y-2">
-        <h1 className="text-2xl font-semibold">Competitions</h1>
-        <p className="text-sm text-muted">
-          Entrants seal their scripts to two verifiers. Both run each script in the same locked-down sandbox, and only
-          verdicts and scores both of them signed with ML-DSA-87 reach the contract. The hidden labels are committed when
-          the competition opens and revealed on-chain at the end, so anyone can recompute the ranking.
-        </p>
+    <Page crumbs={[{ label: "competitions" }]} icon={Trophy} title="Competitions"
+          meta={<>Entrants seal their scripts to two verifiers. Both run every script in the same locked-down sandbox, and only verdicts and scores both signed with ML-DSA-87 reach the contract. The hidden labels are committed when a competition opens and revealed on-chain at the end, so anyone can recompute the ranking.</>}>
+      {!competitionsDeployed && <Empty icon="compete" poster="EMPTY" title="Not deployed">The Competitions contract isn&apos;t on diana yet.</Empty>}
+      {competitionsDeployed && n === 0 && <Empty icon="compete" poster="EMPTY" title="No competitions yet">Host one with scripts/demo_compete.py.</Empty>}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {rows.map(({ c, entries, m }) => {
+          const p = phase(c);
+          return (
+            <PosterLink key={c.id} href={`/compete/${c.id}`} id={c.id + 100} title={m?.title ?? "Untitled"} live={p.label === "Open for entries"}
+                        tag={<Pill tone={p.tone === "ok" ? "ok" : p.tone === "warn" ? "warn" : "pending"}>{p.label}</Pill>}
+                        note={`${formatToken(c.prize)} fUSD prize · ${m?.metric ?? "metric unknown"} · ${entries.length} entries`} />
+          );
+        })}
       </div>
-      {!competitionsDeployed && <Empty>The competitions contract isn&apos;t deployed on diana yet.</Empty>}
-      {competitionsDeployed && n === 0 && <Empty>No competitions yet.</Empty>}
-      {rows.map(({ c, entries, m }) => {
-        const p = phase(c);
-        return (
-          <Link key={c.id} href={`/compete/${c.id}`} className="block focus-visible:outline-2 focus-visible:outline-seal">
-            <Card title={`Competition ${c.id}`} aside={<Badge tone={p.tone}>{p.label}</Badge>}>
-              <p className="text-lg font-medium">{m?.title ?? "Untitled"}</p>
-              <p className="mt-1 text-sm text-muted">
-                {fmt6(c.prize)} fUSD prize · {m?.metric ?? "metric unknown"} · {entries.length} entries ·
-                closes {new Date(c.deadline * 1000).toUTCString()}
-              </p>
-            </Card>
-          </Link>
-        );
-      })}
-    </div>
+    </Page>
   );
 }
