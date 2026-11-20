@@ -14,7 +14,7 @@ from strongchar_qore.market import Contracts
 from strongchar_runtime import owner
 from strongchar_runtime.client import Coordinator
 
-NODES = ["node-1", "node-2", "node-3", "node-4"]
+NODES = ["node-1", "node-2", "node-3", "node-4"]  # plus any other node: printed by its address
 
 
 def main() -> None:

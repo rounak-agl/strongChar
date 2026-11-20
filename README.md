@@ -16,8 +16,10 @@ Status: in development. The plan lives in [`docs/plan/`](docs/plan/).
 
 | Contract | Address |
 |---|---|
-| JobMarket | `0xa5FACae25c46bA115f4A157876dbFb67cF32EaDa` |
-| NodeRegistry | `0x081138AA2ec962d7Fe583F3F135683D9C3B273f1` |
+| JobMarket | `0x03b2956fAd7A45E19067569FF1d4AC266758bc84` |
+| NodeRegistry | `0x0AB4Db5459a668E981a02E2f72f0d88E1A6174b4` |
+| Competitions | `0xF6EAb87db28e05F4Daf352D67e2845670F9325e6` |
+| JobMarket v1 (jobs before 20 Nov, no probation) | `0xa5FACae25c46bA115f4A157876dbFb67cF32EaDa` |
 | BeruToken (BERU) | `0x6Cd5aa3233E040080ab763a15b7c33ac0bC46D34` |
 | BeruFaucet | `0xCF740c7D85C5E708cB8e3a64873aa4dB29Ba3b67` |
 
@@ -45,9 +47,18 @@ Live check after deploy: two real ML-DSA-87 signatures from the registered verif
 3. Both verifiers ran every script in the sandbox (no network, read-only, capped) and signed the same verdict: two valid, the network script invalid with only its exit code published. Validity: [`0x1c5a1d45…`](https://explore.qore.network/tx/0x1c5a1d45b10b096c22e2051f4f39eeca8139f5f34c2f1151b08bcd7811cf3633), [`0xd402eae6…`](https://explore.qore.network/tx/0xd402eae6be238b51aba802df00e8b598ee64e49175d39222bf9fd9a5eb90d87a), [`0x65530438…`](https://explore.qore.network/tx/0x6553043894ca38844f2e2d6181f5765773a22837d22fb97b482d5aee6d14ded8) (about 420k gas each, two ML-DSA-87 checks).
 4. After the deadline both signed the score table [`0xe2ccda25…`](https://explore.qore.network/tx/0xe2ccda2579d272b368516f1a4a07ad55e756800fb912bcfba7e159c9c0f026b4): accuracy 0.832 and 0.815. The host revealed the labels [`0x85fc4602…`](https://explore.qore.network/tx/0x85fc46022d442c2d673c1e9b9eddba7700bf03653516ee3f1c51864644fdeb49), the page recomputes them against the commitment, and the contract paid the winner [`0x3ae6cd99…`](https://explore.qore.network/tx/0x3ae6cd99802bf62c704cde501830d7d653df4380553ffae14b4967720ad2d611).
 
+## Check that training is bit-exact on your machine
+
+```sh
+uv sync --locked --all-packages
+uv run python -m strongchar_runtime.demo
+```
+
+In about a second this trains one round with four nodes, one of which claims weights it never trained. It then replays every node, catches the cheater as `ReplayMismatch`, merges the three honest updates and settles. Every hash it prints must match [`vectors/kernel/demo_round.json`](vectors/kernel/demo_round.json). If yours differ, this machine isn't reproducing the kernel. [docs/how-it-works.md](docs/how-it-works.md) explains why it matches.
+
 ## Run a node on your own machine
 
-Nodes are picked per round from everyone online: fastest self-test benchmark first, then whoever has waited longest. Every honest node seated in a round gets an equal share of that round's budget, so a node earns for each round it trains.
+Nodes are picked each round from everyone online: fastest self-test benchmark first, then whoever has waited longest. Every honest node seated in a round gets an equal share of that round's budget. A new node is on probation until it has verified work behind it. Until then its share goes to a community pool, which tops up proven nodes each round.
 
 ```sh
 uv sync --package strongchar-node
@@ -55,7 +66,17 @@ uv run strongchar-node init                 # makes this machine's key; send the
 uv run strongchar-node setup                # registers ML-DSA-87 and ML-KEM-1024 keys, takes BERU, stakes, joins
 uv run strongchar-node doctor --coordinator <url>
 uv run strongchar-node run --coordinator <url>
+uv run strongchar-node status               # stake, probation, earnings; also: logs, claim, stop
 ```
+
+## Train on your own data
+
+```sh
+uv run strongchar-job quote data.csv --rounds 3 --shards 4   # the price, from the compute; nothing is sent
+uv run strongchar-job post  data.csv --rounds 3 --shards 4   # seal, fund, follow, then open the model
+```
+
+The last CSV column is the target. Shards and the validation split are sealed to the two verifiers. The final model is sealed to you, and you score it on holdout rows that never leave your machine. Running across several computers is covered in [docs/multi-pc.md](docs/multi-pc.md).
 
 ## Security
 

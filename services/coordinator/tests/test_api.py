@@ -147,3 +147,17 @@ def test_admin_routes_are_off_without_a_token_and_need_the_exact_token(tmp_path,
     store.kv_set("missed", '{"0xabc": 2}')
     assert on.post("/v1/admin/nodes/0xABC/rearm", headers={"x-admin-token": "s3cret-admin"}).status_code == 200
     assert store.kv_get("missed") == '{"0xabc": 0}'
+
+
+def test_settlement_blobs_are_pinned_so_later_rounds_and_the_owner_can_still_fetch_them(world, tmp_path):
+    client, ps = world
+    hv = login(client, ps["verifier"])
+    blob = client.post("/v1/blobs", content=envelope([ps["verifier"]]).encode(),
+                       headers={**hv, "X-Kind": "global"}).json()["id"]
+    body = {"payloadHash": "0x" + "11" * 32, "expiry": 5, "signature": "AA==", "settlement": {"globalBlob": blob}}
+    bad = {**body, "settlement": {"globalBlob": "0x" + "22" * 32}}
+    assert client.post("/v1/rounds/1/1/signatures", json=bad, headers=hv).status_code == 400
+    assert client.post("/v1/rounds/1/1/signatures", json=body, headers=hv).status_code == 200
+    store = Store(tmp_path)  # the fixture's store
+    assert store.drop_unpinned(-1) == 0  # even "older than now", a settlement's weights survive cleanup
+    assert store.get_blob(blob) is not None

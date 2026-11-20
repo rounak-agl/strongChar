@@ -226,6 +226,12 @@ def create_app(store: Store, chain: ChainView, allowed_origins: list[str] | None
     def put_signature(job: int, rnd: int, body: SignatureBody, who: Caller) -> dict:
         if not chain.is_verifier(who):
             raise HTTPException(403, "only the job market's two verifiers sign settlements")
+        # The sealed merged weights (or final model) named here must outlive the hourly cleanup of stray uploads:
+        # the next round, possibly days later, and the owner both need them.
+        ids = [b for b in (body.settlement.get("globalBlob"), body.settlement.get("modelBlob")) if isinstance(b, str)]
+        if any(store.get_blob(b) is None for b in ids):
+            raise HTTPException(400, "settlement names a blob that was never uploaded")
+        store.pin(ids)
         store.put_signature(job, rnd, who, body.payloadHash, body.expiry, body.settlement, body.signature)
         return {"ok": True}
 
