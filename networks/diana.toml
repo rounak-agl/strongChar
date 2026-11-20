@@ -10,8 +10,9 @@ evm_rpc = "https://evm-testnet.qore.host"
 fusd = "0x97143B771D34ddb9130b807b135Ae675A5a963CA"
 beru = "0x6Cd5aa3233E040080ab763a15b7c33ac0bC46D34"
 beru_faucet = "0xCF740c7D85C5E708cB8e3a64873aa4dB29Ba3b67"
-node_registry = "0x081138AA2ec962d7Fe583F3F135683D9C3B273f1"
-job_market = "0xa5FACae25c46bA115f4A157876dbFb67cF32EaDa"
+node_registry = "0x0AB4Db5459a668E981a02E2f72f0d88E1A6174b4"
+job_market_v1 = "0xa5FACae25c46bA115f4A157876dbFb67cF32EaDa"
+job_market = "0x03b2956fAd7A45E19067569FF1d4AC266758bc84"
 competitions = "0xF6EAb87db28e05F4Daf352D67e2845670F9325e6"
 deploy_block = 10338199
 

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-// Nodes join with a possession-proven ML-DSA-87 key and a BERU stake; only the JobMarket can mark busy or slash.
+// Nodes join with a possession-proven ML-DSA-87 key and a BERU stake; only the JobMarket can mark busy, slash or
+// credit verified work. A node is on probation until it has PROBATION_SECONDS of verified work behind it.
 pragma solidity ^0.8.30;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -23,6 +24,10 @@ contract NodeRegistry is ReentrancyGuardTransient {
     IERC20 public immutable beru;
     address public market;
     address private immutable _deployer;
+    /// @notice Reference seconds of verified work a node needs before it is paid directly.
+    uint64 public immutable PROBATION_SECONDS;
+    mapping(address => uint64) public verifiedWorkSeconds;
+    mapping(address => uint64) public graduatedAt; // 0 = still on probation
     // Kept as immutables so the full precompile addresses appear in deployed code (MEMORY D39).
     address public immutable verifyPrecompile = PQ.VERIFY;
     address public immutable keyStatusPrecompile = PQ.KEY_STATUS;
@@ -42,16 +47,19 @@ contract NodeRegistry is ReentrancyGuardTransient {
     event NodeBusy(address indexed node, uint256 indexed jobId, uint256 indexed roundId);
     event NodeFreed(address indexed node, uint256 indexed jobId, uint256 indexed roundId);
     event StakeSlashed(address indexed node, uint256 indexed jobId, uint256 indexed roundId, uint256 amount);
+    event WorkCredited(address indexed node, uint256 indexed jobId, uint256 indexed roundId, uint64 seconds_, uint64 total);
+    event Graduated(address indexed node, uint64 at);
 
     modifier onlyMarket() {
         if (msg.sender != market) revert NotAuthorized();
         _;
     }
 
-    constructor(address beru_) {
+    constructor(address beru_, uint64 probationSeconds) {
         if (beru_ == address(0)) revert BadInput();
         beru = IERC20(beru_);
         _deployer = msg.sender;
+        PROBATION_SECONDS = probationSeconds;
     }
 
     /// @dev One-time wiring, because the market's constructor needs this registry's address.
@@ -121,6 +129,23 @@ contract NodeRegistry is ReentrancyGuardTransient {
         n.stake -= uint128(taken);
         beru.safeTransfer(BURN, taken);
         emit StakeSlashed(node, jobId, roundId, taken);
+    }
+
+    /// @dev Called once per paid round, so verified work can only come from settlements both verifiers signed.
+    function creditWork(address node, uint256 jobId, uint256 roundId, uint64 seconds_) external onlyMarket {
+        uint64 total = verifiedWorkSeconds[node] + seconds_;
+        verifiedWorkSeconds[node] = total;
+        emit WorkCredited(node, jobId, roundId, seconds_, total);
+        if (graduatedAt[node] == 0 && total >= PROBATION_SECONDS) {
+            graduatedAt[node] = uint64(block.timestamp);
+            emit Graduated(node, uint64(block.timestamp));
+        }
+    }
+
+    /// @notice True if the node had finished probation strictly before time `t` (a round's opening time).
+    function graduatedBefore(address node, uint64 t) public view returns (bool) {
+        uint64 g = graduatedAt[node];
+        return PROBATION_SECONDS == 0 || (g != 0 && g < t);
     }
 
     function getNode(address node) external view returns (Node memory) {

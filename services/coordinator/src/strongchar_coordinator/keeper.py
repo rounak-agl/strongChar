@@ -54,6 +54,8 @@ def blocker(f: Fleet, node: str, stake: int, now: float, floor_s: float, selftes
         return "stake below the job's requirement"
     if hb is None or now - hb["seen"] > ONLINE_WITHIN:
         return "offline"
+    if hb.get("draining"):
+        return "stopping"
     if busy != 0 or node in f.taken:
         return "busy in another round"
     if hb.get("selftest") != selftest:
@@ -157,7 +159,7 @@ class Keeper:
                     self.c.send(self.acct, self.c.market.functions.voidRound(job_id, rid), self.window)
                     log.info("job %s round %s voided (%s reveals)", job_id, rid, revealed)
                 return None
-        if rid >= params[6]:
+        if rid >= params[6] or self.store.kv_get(f"paused/{job_id}"):
             return None
         draft = self.store.get_draft("0x" + bytes(params[0]).hex())
         if draft is None:

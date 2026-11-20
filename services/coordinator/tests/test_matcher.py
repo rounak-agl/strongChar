@@ -43,12 +43,15 @@ def test_every_blocking_rule_is_reported():
     f.chain[node(4)] = (True, STAKE, 9)
     f.beats[node(5)]["selftest"] = "00" * 32
     f.beats[node(6)]["benchmark_s"] = 61
-    plan, diag = seat(f, quorum=3)
-    assert plan is None  # only node 8 is left
+    f.beats[node(8)]["draining"] = True
+    f.beats[node(9)] = {"benchmark_s": 1.0, "selftest": SELFTEST, "seen": NOW - 5}
+    f.chain[node(9)] = (True, STAKE, 0)
+    plan, diag = seat(f, quorum=2)
+    assert plan is None  # only node 9 is left
     assert diag["blocked"] == {
         node(1): "not joined", node(2): "stake below the job's requirement", node(3): "offline",
         node(4): "busy in another round", node(5): "self-test result doesn't match",
-        node(6): "slower than the benchmark floor", node(7): "benched after missed commits",
+        node(6): "slower than the benchmark floor", node(7): "benched after missed commits", node(8): "stopping",
     }
 
 

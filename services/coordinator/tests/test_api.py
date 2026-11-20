@@ -132,3 +132,32 @@ def test_coordinator_stores_only_ciphertext(world, tmp_path):
     root = tmp_path  # the Store in the fixture writes here
     assert any(root.rglob("*")), "nothing was stored"
     assert scan(root, [secret]) == []
+
+
+def test_admin_routes_are_off_without_a_token_and_need_the_exact_token(tmp_path, monkeypatch):
+    store = Store(tmp_path / "a")
+    nobody = ChainView(pq_key_of=lambda a: None, kem_key_of=lambda a: None, is_verifier=lambda a: False)
+    off = TestClient(create_app(store, nobody))
+    assert off.post("/v1/admin/jobs/1/pause").status_code == 403
+    monkeypatch.setenv("STRONGCHAR_ADMIN_TOKEN", "s3cret-admin")
+    on = TestClient(create_app(store, nobody))
+    assert on.post("/v1/admin/jobs/1/pause", headers={"x-admin-token": "wrong"}).status_code == 403
+    assert on.post("/v1/admin/jobs/1/pause", headers={"x-admin-token": "s3cret-admin"}).json()["paused"]
+    assert store.kv_get("paused/1") == "1"
+    store.kv_set("missed", '{"0xabc": 2}')
+    assert on.post("/v1/admin/nodes/0xABC/rearm", headers={"x-admin-token": "s3cret-admin"}).status_code == 200
+    assert store.kv_get("missed") == '{"0xabc": 0}'
+
+
+def test_settlement_blobs_are_pinned_so_later_rounds_and_the_owner_can_still_fetch_them(world, tmp_path):
+    client, ps = world
+    hv = login(client, ps["verifier"])
+    blob = client.post("/v1/blobs", content=envelope([ps["verifier"]]).encode(),
+                       headers={**hv, "X-Kind": "global"}).json()["id"]
+    body = {"payloadHash": "0x" + "11" * 32, "expiry": 5, "signature": "AA==", "settlement": {"globalBlob": blob}}
+    bad = {**body, "settlement": {"globalBlob": "0x" + "22" * 32}}
+    assert client.post("/v1/rounds/1/1/signatures", json=bad, headers=hv).status_code == 400
+    assert client.post("/v1/rounds/1/1/signatures", json=body, headers=hv).status_code == 200
+    store = Store(tmp_path)  # the fixture's store
+    assert store.drop_unpinned(-1) == 0  # even "older than now", a settlement's weights survive cleanup
+    assert store.get_blob(blob) is not None

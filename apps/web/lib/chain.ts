@@ -42,7 +42,7 @@ export type Seat = { node: Address; committed: boolean; revealed: boolean; final
 export type Round = {
   id: number; status: (typeof ROUND_STATUS)[number]; budget: bigint; startHash: Hex; aggregateHash: Hex;
   aggEvidenceHash: Hex; payEvidenceHash: Hex; slashedBitmap: number; seats: Seat[];
-  commitDeadline: number; revealDeadline: number; finalizeBy: number;
+  commitDeadline: number; revealDeadline: number; finalizeBy: number; drip: bigint; openedAt: number;
 };
 
 export async function getRound(job: number, id: number): Promise<Round> {
@@ -56,6 +56,7 @@ export async function getRound(job: number, id: number): Promise<Round> {
     id, status: ROUND_STATUS[r.status], budget: r.budget, startHash: r.startWeightsHash, aggregateHash: r.aggregateHash,
     aggEvidenceHash: r.aggEvidenceHash, payEvidenceHash: r.payEvidenceHash, slashedBitmap: Number(r.slashedBitmap), seats,
     commitDeadline: Number(r.commitDeadline), revealDeadline: Number(r.revealDeadline), finalizeBy: Number(r.finalizeBy),
+    drip: r.drip, openedAt: Number(r.openedAt),
   };
 }
 
@@ -76,14 +77,59 @@ export async function jobEvents(job: number): Promise<{ settled: TxRef[]; opened
   };
 }
 
-export type NodeInfo = { address: Address; stake: bigint; busyJob: number };
+export type NodeInfo = {
+  address: Address; joined: boolean; stake: bigint; busyJob: number; busyRound: number;
+  verifiedWork: number; graduated: boolean; claimable: bigint;
+};
+
+const readReg = (functionName: string, args: unknown[] = []) =>
+  client.readContract({ address: registry, abi: nodeRegistryAbi, functionName, args } as any) as Promise<any>;
+const readMarket = (functionName: string, args: unknown[] = []) =>
+  client.readContract({ address: market, abi: jobMarketAbi, functionName, args } as any) as Promise<any>;
+
+export async function node(address: Address): Promise<NodeInfo> {
+  const [n, work, grad, probation, claimable] = await Promise.all([
+    readReg("getNode", [address]), readReg("verifiedWorkSeconds", [address]), readReg("graduatedAt", [address]),
+    readReg("PROBATION_SECONDS"), readMarket("claimable", [address]),
+  ]);
+  return {
+    address, joined: n.joined, stake: n.stake, busyJob: Number(n.busyJob), busyRound: Number(n.busyRound),
+    verifiedWork: Number(work), graduated: Number(probation) === 0 || Number(grad) !== 0, claimable,
+  };
+}
 
 export async function nodes(): Promise<NodeInfo[]> {
   const joined = await events(registry, nodeRegistryAbi, "NodeJoined");
-  return Promise.all(joined.map(async (e: any) => {
-    const n = (await client.readContract({ address: registry, abi: nodeRegistryAbi, functionName: "getNode", args: [e.args.node] })) as any;
-    return { address: e.args.node, stake: n.stake, busyJob: Number(n.busyJob) };
-  }));
+  return Promise.all(joined.map((e: any) => node(e.args.node)));
+}
+
+/** The community pool (fUSD forfeited by nodes on probation) and how much verified work graduates a node. */
+export async function pool(): Promise<{ balance: bigint; probationSeconds: number; dripBps: number }> {
+  const [balance, probation, drip] = await Promise.all([readMarket("communityPool"), readReg("PROBATION_SECONDS"), readMarket("DRIP_BPS")]);
+  return { balance, probationSeconds: Number(probation), dripBps: Number(drip) };
+}
+
+export type Pay = { round: number; node: Address; amount: bigint; forfeited: boolean; tx: Hex };
+
+/** Every payout of a job (or of one node across jobs), including shares forfeited to the pool on probation. */
+export async function payments(filter: { job?: number; node?: Address }): Promise<(Pay & { job: number })[]> {
+  const args: Record<string, unknown> = {};
+  if (filter.job) args.jobId = BigInt(filter.job);
+  if (filter.node) args.node = filter.node;
+  const [paid, forfeited] = await Promise.all([
+    events(market, jobMarketAbi, "Paid", args), events(market, jobMarketAbi, "ForfeitedToPool", args),
+  ]);
+  const row = (forfeited: boolean) => (e: any) => ({
+    job: Number(e.args.jobId), round: Number(e.args.roundId), node: e.args.node, amount: e.args.amount, forfeited, tx: e.transactionHash,
+  });
+  return [...paid.map(row(false)), ...forfeited.map(row(true))].sort((a, b) => a.job - b.job || a.round - b.round);
+}
+
+/** node (lowercase) -> shard it trained, from the round's RoundOpened event (the only record of it). */
+export async function shardsOf(job: number, round: number): Promise<Record<string, number>> {
+  const [e] = await events(market, jobMarketAbi, "RoundOpened", { jobId: BigInt(job), roundId: BigInt(round) });
+  if (!e) return {};
+  return Object.fromEntries((e.args.nodes as Address[]).map((n, i) => [n.toLowerCase(), Number(e.args.shards[i])]));
 }
 
 export const fmt6 = (v: bigint) => (Number(v) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 6 });

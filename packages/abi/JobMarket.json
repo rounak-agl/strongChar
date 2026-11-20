@@ -32,6 +32,19 @@
  },
  {
   "type": "function",
+  "name": "DRIP_BPS",
+  "inputs": [],
+  "outputs": [
+   {
+    "name": "",
+    "type": "uint256",
+    "internalType": "uint256"
+   }
+  ],
+  "stateMutability": "view"
+ },
+ {
+  "type": "function",
   "name": "MAX_CHECKPOINTS",
   "inputs": [],
   "outputs": [
@@ -52,6 +65,19 @@
     "name": "",
     "type": "uint256",
     "internalType": "uint256"
+   }
+  ],
+  "stateMutability": "view"
+ },
+ {
+  "type": "function",
+  "name": "MIN_STAKE",
+  "inputs": [],
+  "outputs": [
+   {
+    "name": "",
+    "type": "uint128",
+    "internalType": "uint128"
    }
   ],
   "stateMutability": "view"
@@ -162,6 +188,19 @@
  },
  {
   "type": "function",
+  "name": "communityPool",
+  "inputs": [],
+  "outputs": [
+   {
+    "name": "",
+    "type": "uint256",
+    "internalType": "uint256"
+   }
+  ],
+  "stateMutability": "view"
+ },
+ {
+  "type": "function",
   "name": "coordinator",
   "inputs": [],
   "outputs": [
@@ -248,6 +287,11 @@
         "internalType": "uint32"
        }
       ]
+     },
+     {
+      "name": "refWorkSecondsPerRound",
+      "type": "uint32",
+      "internalType": "uint32"
      }
     ]
    }
@@ -469,6 +513,11 @@
         "internalType": "uint32"
        }
       ]
+     },
+     {
+      "name": "refWorkSecondsPerRound",
+      "type": "uint32",
+      "internalType": "uint32"
      }
     ]
    },
@@ -582,6 +631,16 @@
       "name": "slashedBitmap",
       "type": "uint32",
       "internalType": "uint32"
+     },
+     {
+      "name": "drip",
+      "type": "uint256",
+      "internalType": "uint256"
+     },
+     {
+      "name": "openedAt",
+      "type": "uint64",
+      "internalType": "uint64"
      }
     ]
    },
@@ -674,6 +733,35 @@
    }
   ],
   "stateMutability": "view"
+ },
+ {
+  "type": "function",
+  "name": "minStake",
+  "inputs": [
+   {
+    "name": "budget",
+    "type": "uint256",
+    "internalType": "uint256"
+   },
+   {
+    "name": "rounds",
+    "type": "uint16",
+    "internalType": "uint16"
+   },
+   {
+    "name": "quorum",
+    "type": "uint8",
+    "internalType": "uint8"
+   }
+  ],
+  "outputs": [
+   {
+    "name": "",
+    "type": "uint128",
+    "internalType": "uint128"
+   }
+  ],
+  "stateMutability": "pure"
  },
  {
   "type": "function",
@@ -926,6 +1014,37 @@
  },
  {
   "type": "event",
+  "name": "ForfeitedToPool",
+  "inputs": [
+   {
+    "name": "jobId",
+    "type": "uint256",
+    "indexed": true,
+    "internalType": "uint256"
+   },
+   {
+    "name": "roundId",
+    "type": "uint256",
+    "indexed": true,
+    "internalType": "uint256"
+   },
+   {
+    "name": "node",
+    "type": "address",
+    "indexed": true,
+    "internalType": "address"
+   },
+   {
+    "name": "amount",
+    "type": "uint256",
+    "indexed": false,
+    "internalType": "uint256"
+   }
+  ],
+  "anonymous": false
+ },
+ {
+  "type": "event",
   "name": "JobClosed",
   "inputs": [
    {
@@ -982,6 +1101,62 @@
     "type": "bytes32",
     "indexed": false,
     "internalType": "bytes32"
+   }
+  ],
+  "anonymous": false
+ },
+ {
+  "type": "event",
+  "name": "Paid",
+  "inputs": [
+   {
+    "name": "jobId",
+    "type": "uint256",
+    "indexed": true,
+    "internalType": "uint256"
+   },
+   {
+    "name": "roundId",
+    "type": "uint256",
+    "indexed": true,
+    "internalType": "uint256"
+   },
+   {
+    "name": "node",
+    "type": "address",
+    "indexed": true,
+    "internalType": "address"
+   },
+   {
+    "name": "amount",
+    "type": "uint256",
+    "indexed": false,
+    "internalType": "uint256"
+   }
+  ],
+  "anonymous": false
+ },
+ {
+  "type": "event",
+  "name": "PoolDripped",
+  "inputs": [
+   {
+    "name": "jobId",
+    "type": "uint256",
+    "indexed": true,
+    "internalType": "uint256"
+   },
+   {
+    "name": "roundId",
+    "type": "uint256",
+    "indexed": true,
+    "internalType": "uint256"
+   },
+   {
+    "name": "amount",
+    "type": "uint256",
+    "indexed": false,
+    "internalType": "uint256"
    }
   ],
   "anonymous": false
@@ -1265,6 +1440,11 @@
  {
   "type": "error",
   "name": "SignatureExpired",
+  "inputs": []
+ },
+ {
+  "type": "error",
+  "name": "StakeTooLow",
   "inputs": []
  },
  {

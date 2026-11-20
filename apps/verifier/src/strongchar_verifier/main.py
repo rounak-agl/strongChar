@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import base64
 import logging
 import os
@@ -10,6 +11,7 @@ import time
 
 from strongchar_core.encodings import PQKind
 from web3.exceptions import ContractCustomError
+from strongchar_core.aggregate import merge
 from strongchar_core.finalize import finalize
 from strongchar_core.judge import Verdict, judge
 from strongchar_qore import keystore, pq, seal
@@ -34,6 +36,7 @@ class Verifier:
         self.window = WindowManager(self.c.chain, self.actor.account, (self.c.dep.job_market,))
         self.verifiers = [self.c.dep.verifier_a, self.c.dep.verifier_b]
         self.addr = self.actor.evm.lower()
+        self._rebuilt: dict[bytes, object] = {}  # start hash -> weights rebuilt by replay
         self.compete = None
         if self.c.dep.competitions:
             from pathlib import Path
@@ -66,6 +69,40 @@ class Verifier:
                 sigs = self.coord.signatures(job, r.round)
             self._submit_if_ready(r, sigs)
 
+    def _start(self, spec: JobSpec, draft: dict, r: cv.RoundView, settled: list[int]):
+        """The round's start weights: from the sealed copy if it's still stored, else rebuilt by replaying history."""
+        contract = self.c.dep.job_market
+        try:
+            return work.start_weights(spec, r.start_hash, self.c.chain, self.coord, self.actor.seal, contract,
+                                      r.job, settled)
+        except LookupError:
+            log.warning("job %s: sealed weights for round %s are gone; rebuilding them by replay", r.job, r.round)
+        if r.start_hash in self._rebuilt:
+            return self._rebuilt[r.start_hash]
+        # Training is bit-exact, so replaying every settled round's accepted nodes from the initial weights gives
+        # the same bytes the chain committed to. Both verifiers hold every shard, so either can do it alone.
+        w, dom = spec.initial_weights(), self.c.domain()
+        for done, rnd in enumerate(settled):
+            sig = next(iter(self.coord.signatures(r.job, rnd)), None)
+            if sig is None:
+                raise LookupError(f"job {r.job} round {rnd} has no settlement evidence to replay")
+            accepted = json.loads(sig["settlement"]["aggEvidence"])["merge"]["accepted"]
+            shard_of = cv.shard_of(self.c, r.job, rnd)
+            updates = []
+            for node in accepted:
+                shard = shard_of[node.lower()]
+                start_row, x, y = work.open_shard(self.c.chain, self.coord, self.actor.seal, contract, r.job, draft,
+                                                  shard, self.verifiers)
+                updates.append((node, work.train(spec, dom, r.job, shard, start_row, x, y, w, done)[0]))
+            w = merge(w, updates).weights
+            if work.weights_hash(spec.hash, w) != bytes(self.c.round(r.job, rnd)[0][7]):
+                raise LookupError(f"replaying job {r.job} round {rnd} doesn't reproduce its aggregate hash")
+        if work.weights_hash(spec.hash, w) != r.start_hash:
+            raise LookupError(f"replayed history doesn't reach job {r.job} round {r.round}'s start weights")
+        self._rebuilt[r.start_hash] = w
+        log.info("job %s: rebuilt round %s start weights by replaying %s rounds", r.job, r.round, len(settled))
+        return w
+
     def _feed(self, r: cv.RoundView) -> None:
         """Re-seal each seated node's shard, and the start weights after round 1, to that node alone.
 
@@ -79,8 +116,7 @@ class Verifier:
         spec = JobSpec(draft["spec"])
         contract = self.c.dep.job_market
         settled = cv.settled_rounds(self.c, r.job, r.round)
-        start = work.start_weights(spec, r.start_hash, self.c.chain, self.coord, self.actor.seal, contract, r.job,
-                                   settled)
+        start = self._start(spec, draft, r, settled)
         first = r.start_hash == work.weights_hash(spec.hash, spec.initial_weights())
         fed = {}
         for node, shard in cv.shard_of(self.c, r.job, r.round).items():
@@ -104,8 +140,7 @@ class Verifier:
         wl = spec.workload()
         contract = self.c.dep.job_market
         settled = cv.settled_rounds(self.c, r.job, r.round)
-        start = work.start_weights(spec, r.start_hash, self.c.chain, self.coord, self.actor.seal, contract, r.job,
-                                   settled)
+        start = self._start(spec, draft, r, settled)
         shard_of = cv.shard_of(self.c, r.job, r.round)
         dom = self.c.domain()
         revealed, failed = {}, {}
@@ -125,9 +160,14 @@ class Verifier:
             log.info("job %s round %s node %s: %s", r.job, r.round, node, verdict.value)
         xv, yv = work.open_val(self.c.chain, self.coord, self.actor.seal, contract, r.job, draft, self.verifiers)
         gate = spec.raw["gate"]
+        # Probation and the pool drip come from the chain as of the round's opening, so both verifiers agree.
+        rnd, _ = self.c.round(r.job, r.round)
+        drip, opened_at = rnd[11], rnd[12]
+        graduated = {cv.checksum(n): self.c.registry.functions.graduatedBefore(cv.checksum(n), opened_at).call()
+                     for n in r.roster}
         fin = finalize(r.job, r.round, spec.hash, start, [(cv.checksum(n), shard_of[n]) for n in r.roster],
                        revealed, failed, lambda w: wl.evaluate(w, xv, yv)[0], r.budget,
-                       float(gate["relTol"]), float(gate["absTol"]))
+                       float(gate["relTol"]), float(gate["absTol"]), graduated, drip)
         s = fin.settlement
         last = r.round == r.params[6]
         result = fin.weights  # merged when accepted, the start weights when reverted

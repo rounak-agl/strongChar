@@ -69,3 +69,30 @@ def test_both_verifiers_get_identical_settlements():
     a, b = finalize(*args), finalize(*args)
     assert a.settlement == b.settlement and a.settlement.payload_hash() == b.settlement.payload_hash()
     assert a.agg_evidence == b.agg_evidence and a.pay_evidence == b.pay_evidence
+
+
+def test_probation_and_drip_obey_the_contract_rule_for_every_small_case():
+    """Mirror of JobMarket._pay: payouts sum to budget + drip (drip only if a payee graduated); probation nodes are
+    listed with exactly their equal share (the contract forfeits it); graduated nodes get at least half a share."""
+    import itertools
+
+    for n in range(1, 5):
+        nodes = N[:n]
+        for flags in itertools.product([False, True], repeat=n):
+            grad = dict(zip(nodes, flags))
+            for budget in (1, 7, 1_000_001):
+                for drip in (0, 3, 99_999):
+                    shares = payout.equal(budget, nodes, grad, drip)
+                    paid = drip if any(flags) else 0
+                    assert sum(shares.values()) == budget + paid == budget + payout.drip_paid(nodes, grad, drip)
+                    each = budget // n
+                    for node in nodes:
+                        if grad[node]:
+                            assert shares[node] >= budget // 2 // n
+                        else:
+                            assert shares[node] in (each, each + budget % n)  # no drip for probation
+
+
+def test_everyone_graduated_is_plain_equal_pay_plus_drip():
+    assert payout.equal(9, N[:3], None, 0) == payout.equal(9, N[:3])
+    assert sum(payout.equal(9, N[:3], None, 6).values()) == 15

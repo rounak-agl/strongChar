@@ -51,9 +51,11 @@ def _hex(b: bytes) -> str:
 def finalize(job: int, rnd: int, spec_hash: bytes, start: np.ndarray, roster: Sequence[tuple[str, int]],
              revealed: dict[str, tuple[bytes, np.ndarray]], failed: dict[str, Verdict],
              val_loss: Callable[[np.ndarray], float], budget: int,
-             rel_tol: float = 0.1, abs_tol: float = 0.01) -> Finalized:
+             rel_tol: float = 0.1, abs_tol: float = 0.01, graduated: dict[str, bool] | None = None,
+             drip: int = 0) -> Finalized:
     """roster: [(node, shard)] in slot order. revealed: {node: (final weights hash, weights)} for revealed nodes.
     failed: {node: verdict} that both verifiers agreed on; those nodes are left out of the merge.
+    graduated / drip: probation status at round open and the pool drip, both read from the chain (see payout).
     """
     start_hash = k256(to_blob(spec_hash, start))
     slots = [node for node, _ in roster]
@@ -63,7 +65,7 @@ def finalize(job: int, rnd: int, spec_hash: bytes, start: np.ndarray, roster: Se
     accepted = bool(g.accepted) and not g.reverted
     eligible = g.accepted if accepted else []
     weights = g.weights if accepted else start.copy()
-    shares = payout.equal(budget, eligible)
+    shares = payout.equal(budget, eligible, graduated, drip)
     blob = to_blob(spec_hash, weights)
     aggregate_hash = k256(blob) if accepted else start_hash
 
@@ -96,7 +98,9 @@ def finalize(job: int, rnd: int, spec_hash: bytes, start: np.ndarray, roster: Se
         "job": job,
         "round": rnd,
         "budget": budget,
+        "drip": payout.drip_paid(eligible, graduated, drip),
         "eligible": by_address(eligible),
+        "probation": by_address([n for n in eligible if graduated is not None and not graduated[n]]),
         "payouts": [{"node": n, "amount": a} for n, a in sorted(shares.items(), key=lambda kv: int(kv[0], 16))],
     })
     # A cheater is slashed whether or not the merge was kept: the replay proved it lied either way.

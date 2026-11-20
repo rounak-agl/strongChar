@@ -5,6 +5,12 @@ Every step reads chain state first and skips what is already done, so `setup` ca
 
 from __future__ import annotations
 
+import os
+import signal
+import subprocess
+import time
+from pathlib import Path
+
 import httpx
 from qorsdk import msg
 from qorsdk.kem import parse_kem_key
@@ -90,3 +96,67 @@ def doctor(name: str, coordinator: str) -> bool:
     for label, passed, note in checks:
         print(f"{'ok  ' if passed else 'FAIL'} {label}{'' if passed and label not in ('stake', 'QOR for gas') else f'  ({note})'}")
     return all(p for _, p, _ in checks)
+
+
+def _running(state: Path) -> int | None:
+    pid_file = state / "node.pid"
+    try:
+        pid = int(pid_file.read_text())
+        os.kill(pid, 0)
+        return pid
+    except (OSError, ValueError):
+        return None
+
+
+def status(name: str, coordinator: str, state: Path) -> None:
+    a = keystore.load(name)
+    c = Contracts()
+    n = c.registry.functions.getNode(a.evm).call()
+    work = c.registry.functions.verifiedWorkSeconds(a.evm).call()
+    need = c.registry.functions.PROBATION_SECONDS().call()
+    graduated = c.registry.functions.graduatedAt(a.evm).call() != 0 or need == 0
+    pid = _running(state)
+    print(f"node      {a.evm}  ({'running, pid ' + str(pid) if pid else 'not running'})")
+    print(f"registry  {'joined' if n[0] else 'not joined'}, stake {n[1] / 1e6:g} BERU, "
+          f"{'busy in job ' + str(n[2]) + ' round ' + str(n[3]) if n[2] else 'idle'}")
+    print(f"probation {'graduated' if graduated else 'on probation'} ({work} of {need} s verified work); "
+          f"{'paid directly' if graduated else 'round pay goes to the community pool until then'}")
+    print(f"earnings  {c.market.functions.claimable(a.evm).call() / 1e6} fUSD claimable "
+          f"(community pool {c.market.functions.communityPool().call() / 1e6} fUSD)")
+    try:
+        beat = httpx.get(f"{coordinator}/v1/nodes", timeout=5).json()["nodes"].get(a.evm.lower())
+        print(f"heartbeat {'%.0f s ago' % (time.time() - beat['seen']) if beat else 'none'} at {coordinator}")
+    except httpx.HTTPError:
+        print(f"heartbeat coordinator {coordinator} unreachable")
+
+
+def stop(state: Path, timeout_s: float = 900) -> None:
+    pid = _running(state)
+    if pid is None:
+        print("not running")
+        return
+    os.kill(pid, signal.SIGTERM)
+    print(f"asked pid {pid} to stop; it finishes any reveal it owes first (up to one reveal window)")
+    deadline = time.time() + timeout_s
+    while _running(state) and time.time() < deadline:
+        time.sleep(2)
+    print("stopped" if not _running(state) else "still finishing; check `strongchar-node logs`")
+
+
+def logs(path: Path, n: int, follow: bool) -> None:
+    if not path.exists():
+        raise SystemExit(f"no log yet at {path}")
+    subprocess.run(["tail", f"-n{n}", *(["-f"] if follow else []), str(path)], check=False)
+
+
+def claim(name: str) -> None:
+    a = keystore.load(name)
+    c = Contracts()
+    amount = c.market.functions.claimable(a.evm).call()
+    if amount == 0:
+        print("nothing to claim yet")
+        return
+    w = WindowManager(c.chain, a.account, (c.dep.job_market,))
+    r = c.send(a.account, c.market.functions.claim(), w)
+    c.chain.close_window(a.account)
+    print(f"claimed {amount / 1e6} fUSD: {r.txhash}")
