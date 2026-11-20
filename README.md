@@ -47,6 +47,14 @@ Live check after deploy: two real ML-DSA-87 signatures from the registered verif
 3. Both verifiers ran every script in the sandbox (no network, read-only, capped) and signed the same verdict: two valid, the network script invalid with only its exit code published. Validity: [`0x1c5a1d45…`](https://explore.qore.network/tx/0x1c5a1d45b10b096c22e2051f4f39eeca8139f5f34c2f1151b08bcd7811cf3633), [`0xd402eae6…`](https://explore.qore.network/tx/0xd402eae6be238b51aba802df00e8b598ee64e49175d39222bf9fd9a5eb90d87a), [`0x65530438…`](https://explore.qore.network/tx/0x6553043894ca38844f2e2d6181f5765773a22837d22fb97b482d5aee6d14ded8) (about 420k gas each, two ML-DSA-87 checks).
 4. After the deadline both signed the score table [`0xe2ccda25…`](https://explore.qore.network/tx/0xe2ccda2579d272b368516f1a4a07ad55e756800fb912bcfba7e159c9c0f026b4): accuracy 0.832 and 0.815. The host revealed the labels [`0x85fc4602…`](https://explore.qore.network/tx/0x85fc46022d442c2d673c1e9b9eddba7700bf03653516ee3f1c51864644fdeb49), the page recomputes them against the commitment, and the contract paid the winner [`0x3ae6cd99…`](https://explore.qore.network/tx/0x3ae6cd99802bf62c704cde501830d7d653df4380553ffae14b4967720ad2d611).
 
+## Live on AWS (20 Nov 2026)
+
+The coordinator runs at `https://32-237-26-58.sslip.io` (Caddy with TLS, no OpenAPI schema, HSTS). The two verifiers and four nodes run on separate servers with no inbound ports, and competition entries run under gVisor. All three servers are arm64.
+
+- Job 3 trained on the live stack: holdout accuracy 0.310 → 0.777. node-4 cheated and was slashed in both rounds. The other three nodes, past probation, were paid directly plus the community-pool top-up. Created in [`0xc8dfeaf4…`](https://explore.qore.network/tx/0xc8dfeaf418b4c170562a4ca9c43b4b20ea599356944b9499787a7ed08706f731).
+- Competition 2 ran every entry in the gVisor sandbox. Logistic regression scored 0.832 and won, always-0 scored 0.815, and the script that tries the network was rejected as a crash. Created in [`0x9e30de7f…`](https://explore.qore.network/tx/0x9e30de7fcea9e6724650a64537c3535905afb07b0e7eb5e81f88a08d2c593bf5).
+- The pinned demo round gives the same hashes on these arm64 servers as on an x86 laptop.
+
 ## Check that training is bit-exact on your machine
 
 ```sh
