@@ -123,6 +123,11 @@ The project's running log. Update at the end of every working session. Newest lo
 - Finding: Foundry fork tests can't exercise QoreChain's precompiles (forks run in Foundry's own EVM, where 0x…0a01/0a02 have no code), so the real pqcVerify check runs against diana with eth_call after deploy.
 - Next: P1.5 deploy (needs Rounak's go-ahead), P1.6 CI.
 
+### 2026-11-21
+- New word-mosaic design system for the web app (PR #24): sidebar shell, top bar with data age and refresh, word-mosaic hero drawing the latest job's signed validation-loss curve, live network strip, round ledger, poster cards, cover bands, loss chart, round receipts, pixel-art nodes with probation meters, Get started page. Every page checked against live AWS data in headless Chrome.
+- Deployed to Vercel with Rounak's account: https://strongchar.vercel.app (project strongchar, root apps/web, NEXT_PUBLIC_API_URL set for production and preview). All 11 routes return 200 publicly; production CSP has no unsafe-eval. Coordinator CORS allows that origin.
+- Process fix: scripts/leak_check.sh scans staged changes only, so stage before running it. A full scan of tracked files, commit messages and PR text found nothing.
+
 ### 2026-11-20
 - AWS rollout (P6.1 servers): keys bundled per server locally, uploaded to a private TLS-only encrypted S3 bucket (1-day expiry) with pre-signed PUT links, fetched by each server with pre-signed GET links through SSM, installed 600/uid 10002, then deleted from S3 and shredded locally, so mnemonics never appeared in SSM history or this session. Two rollout bugs: the coordinator's named volume was root-owned (image now creates /data for uid 10002), and on Debian trixie `docker.io` no longer ships the docker CLI, so verifiers couldn't start sandboxes (image now installs `docker-cli` only). Both fixed, PRs #21 and #22.
 - Cross-architecture proof: the pinned demo round run on the arm64 nodes server gives the same SHA-256 over every hash and the same settlement payload as the x86 vector.

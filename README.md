@@ -10,7 +10,7 @@ Train models on private data using other people's computers, and run Kaggle-styl
 
 Built for **Build Before Q-Day: The QoreChain Developer Fest** (category: Encrypted Apps), on testnet `qorechain-diana`.
 
-Status: in development. The plan lives in [`docs/plan/`](docs/plan/).
+**Live:** web app at [strongchar.vercel.app](https://strongchar.vercel.app), coordinator at `https://32-237-26-58.sslip.io`, all on testnet `qorechain-diana`. The plan lives in [`docs/plan/`](docs/plan/).
 
 ## Deployed on qorechain-diana (EVM chain 9800)
 

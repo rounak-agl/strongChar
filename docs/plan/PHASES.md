@@ -111,7 +111,7 @@ Cut line (cut item 5): if the main entry isn't through Phase 4 exit by 28 Nov ev
 
 ## Phase 6. Ship (29 Nov–1 Dec)
 
-- [~] P6.1 (20 Nov: all three servers live on AWS: coordinator behind Caddy TLS at 32-237-26-58.sslip.io, 4 nodes, 2 verifiers with gVisor; keys delivered per server through a private S3 bucket and pre-signed links, then deleted; Vercel pending Rounak) Both VMs: `docker compose up`, TLS on the sslip.io hostname, health checks, restart policies, log rotation; Vercel deploy.
+- [x] P6.1 (20–21 Nov: three AWS servers live, coordinator behind Caddy TLS at 32-237-26-58.sslip.io, 4 nodes, 2 verifiers with gVisor; web on Vercel at strongchar.vercel.app) Both VMs: `docker compose up`, TLS on the sslip.io hostname, health checks, restart policies, log rotation; Vercel deploy.
 - [x] P6.2 (20 Nov, curl-based; nuclei/ffuf not installed: needs Rounak's OK to download. Fixed: public OpenAPI schema removed, HSTS and CSP added) Self-scan of our own edge host only (httpx, nuclei, ffuf): no exposed admin routes, debug pages or default files; fix findings.
 - [x] P6.3 (20 Nov: job 3 and competition 2 on the AWS stack, both settled) Run one fresh job and one fresh competition on the live stack; keep them visible for judges.
 - [~] P6.4 (20 Nov: THREAT_MODEL.md written and linked from the README; AI_USAGE.md current; README final pass and docs/how-it-works.md pending) README (what, why, trust model, how it's made, credits, run it, tx hashes, gas figures, limits), THREAT_MODEL.md, AI_USAGE.md final pass, docs/how-it-works.md.
