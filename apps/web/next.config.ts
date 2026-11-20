@@ -4,7 +4,8 @@ import type { NextConfig } from "next";
 const api = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8700";
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  // React's dev build needs eval for its debugging tools; production never does.
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data:",
   `connect-src 'self' ${api} https://evm-testnet.qore.host https://api-testnet.qore.host`,

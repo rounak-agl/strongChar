@@ -40,3 +40,4 @@ run-logs/
 
 # Per-service key files for the servers (never committed)
 docker/secrets/
+apps/web/AGENTS.md

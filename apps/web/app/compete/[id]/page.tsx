@@ -1,5 +1,8 @@
 // One competition: the ranking, every entry's PQ-signed verdict with each verifier's sandbox run, and the label check.
 import { notFound } from "next/navigation";
+import { Trophy } from "lucide-react";
+import { Page } from "@/components/page";
+import { CoverHead } from "@/components/client";
 import { Badge, Card, Empty, Hash, ProofStamp } from "@/components/ui";
 import { explorerTx, fmt6, short } from "@/lib/chain";
 import {
@@ -24,24 +27,15 @@ export default async function CompetitionPage({ params }: { params: Promise<{ id
   const matches = revealed ? labelCommitOf(revealed.labels, revealed.salt) === c.labelCommit : null;
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold">{m?.title ?? `Competition ${id}`}</h1>
-          <Badge tone={p.tone}>{p.label}</Badge>
-        </div>
-        <p className="text-sm text-muted">
-          {fmt6(c.prize)} fUSD prize · {m?.task ?? "task unknown"}, scored by {m?.metric ?? "an unknown metric"}
-          {m?.rows ? ` on ${m.rows.toLocaleString()} hidden rows` : ""} · up to {c.maxPerEntrant} entries each ·
-          closes {new Date(c.deadline * 1000).toUTCString()}
-        </p>
-        {m?.train && (
-          <p className="text-sm text-muted">
-            Public training set: <a className="underline" href={publicUrl(m.train)}>train.csv</a>. The test rows
-            and their labels are sealed to the two verifiers.
-          </p>
-        )}
-      </div>
+    <Page crumbs={[{ href: "/compete", label: "competitions" }, { label: `#${String(id).padStart(2, "0")}`, mono: true }]} icon={Trophy}
+          title={<span className="flex flex-wrap items-center gap-3">{m?.title ?? `Competition ${id}`} <Badge tone={p.tone}>{p.label}</Badge></span>}
+          meta={<>
+            {fmt6(c.prize)} fUSD prize · {m?.task ?? "task unknown"}, scored by {m?.metric ?? "an unknown metric"}
+            {m?.rows ? ` on ${m.rows.toLocaleString("en-US")} hidden rows` : ""} · up to {c.maxPerEntrant} entries each · closes {new Date(c.deadline * 1000).toUTCString()}
+            {m?.train && <> · public training set <a className="underline" href={publicUrl(m.train)}>train.csv</a>; test rows and labels are sealed to the two verifiers</>}
+          </>}>
+      <CoverHead id={id + 100} title={m?.title ?? `Competition ${id}`} live={p.label === "Open for entries"}
+                 meta={[p.label, `${fmt6(c.prize)} fUSD prize`, `${entries.length} entries`, m?.metric ?? ""].filter(Boolean)} />
 
       <Card title="Ranking" aside={ev.scores && <ProofStamp tx={ev.scores.tx} />}>
         {!c.scoresPosted ? (
@@ -120,6 +114,6 @@ export default async function CompetitionPage({ params }: { params: Promise<{ id
           </div>
         )}
       </Card>
-    </div>
+    </Page>
   );
 }
