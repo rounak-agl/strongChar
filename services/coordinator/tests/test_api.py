@@ -161,3 +161,13 @@ def test_settlement_blobs_are_pinned_so_later_rounds_and_the_owner_can_still_fet
     store = Store(tmp_path)  # the fixture's store
     assert store.drop_unpinned(-1) == 0  # even "older than now", a settlement's weights survive cleanup
     assert store.get_blob(blob) is not None
+
+
+def test_no_schema_or_docs_and_hardening_headers(world):
+    client, _ = world
+    for path in ("/openapi.json", "/docs", "/redoc"):
+        assert client.get(path).status_code == 404
+    h = client.get("/v1/health").headers
+    assert h["strict-transport-security"].startswith("max-age=")
+    assert "default-src 'none'" in h["content-security-policy"]
+    assert h["x-frame-options"] == "DENY" and h["x-content-type-options"] == "nosniff"

@@ -106,7 +106,8 @@ def blob_ids(manifest: dict) -> list[str]:
 
 
 def create_app(store: Store, chain: ChainView, allowed_origins: list[str] | None = None) -> FastAPI:
-    app = FastAPI(title="strongChar coordinator", version="0.1.0", docs_url=None, redoc_url=None)
+    # No docs and no schema: the route list (admin routes included) isn't published for anyone to map.
+    app = FastAPI(title="strongChar coordinator", version="0.1.0", docs_url=None, redoc_url=None, openapi_url=None)
     auth = Auth(chain.pq_key_of)
     login_limit = RateLimiter(10, 60)
     upload_limit = RateLimiter(120, 60)
@@ -121,6 +122,9 @@ def create_app(store: Store, chain: ChainView, allowed_origins: list[str] | None
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["Cache-Control"] = "no-store"
+        # JSON only, never rendered as a page; browsers must keep using HTTPS for this host for a year.
+        response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000"
         return response
 
     def caller(authorization: Annotated[str | None, Header()] = None) -> str:
