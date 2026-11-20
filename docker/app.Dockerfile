@@ -15,7 +15,7 @@ RUN uv sync --frozen --no-dev --no-editable \
  && .venv/bin/python -c "import qorpqc" # first import builds liboqs into /opt/oqs
 
 FROM python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates docker.io \
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates docker-cli \
  && rm -rf /var/lib/apt/lists/* && useradd --uid 10002 --create-home strongchar \
  && install -d -o strongchar -g strongchar -m 700 /data  # a new named volume copies this owner, so the coordinator can write
 COPY --from=build /src/.venv /src/.venv
