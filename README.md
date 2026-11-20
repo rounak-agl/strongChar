@@ -1,5 +1,9 @@
 # strongChar
 
+![strongChar: train on data nobody can read, pay only for proven work](docs/cover/cover.png)
+
+[![Built on QoreChain](https://build.qorechain.io/badge/strongchar.svg)](https://build.qorechain.io/p/strongchar)
+
 **Your data, sealed to only the machines that need it. Every step proven.**
 
 Train models on private data using other people's computers, and run Kaggle-style competitions where the hidden test set never leaks.

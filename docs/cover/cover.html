@@ -1,0 +1,87 @@
+<!doctype html>
+<!-- Featured image (1600x900): render with
+     google-chrome --headless=new --window-size=1600,900 --screenshot=docs/cover/cover.png docs/cover/cover.html -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>strongChar cover</title>
+<style>
+  :root { --ground: #0b0908; --ink: #f2f0ed; --muted: #bab4ad; --l1: #33100c; --l2: #5c130e; --l3: #8f150f; --l4: #c4170f; --l5: #e8361c; --bone: #d6b48c; --tex: #1c1210; --teal: #4fd1b8; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1600px; height: 900px; background: var(--ground); overflow: hidden; }
+  body { font-family: "Instrument Sans", "Inter", system-ui, sans-serif; color: var(--ink); position: relative; }
+  #field { position: absolute; inset: 0; padding: 26px 30px; display: flex; flex-direction: column; gap: 4px; font: 500 11px/1 "Geist Mono", ui-monospace, monospace; letter-spacing: .04em; }
+  .row { display: flex; gap: 4px; white-space: nowrap; }
+  .t { padding: 3px 4px; color: #3a2420; background: transparent; }
+  .t[data-l="1"] { background: var(--l1); color: #6b2318; }
+  .t[data-l="2"] { background: var(--l2); color: #b9442f; }
+  .t[data-l="3"] { background: var(--l3); color: #2a0705; }
+  .t[data-l="4"] { background: var(--l4); color: #2a0705; }
+  .t[data-l="5"] { background: var(--l5); color: #2a0705; }
+  .t[data-l="6"] { background: var(--bone); color: #2a0705; }
+  .t[data-l="7"] { background: var(--ink); color: #2a0705; }
+  .mask { position: absolute; inset: 0; background: linear-gradient(90deg, var(--ground) 0%, var(--ground) 40%, rgba(11,9,8,.75) 52%, rgba(11,9,8,0) 68%); }
+  .copy { position: absolute; left: 96px; top: 0; bottom: 0; width: 760px; display: flex; flex-direction: column; justify-content: center; gap: 34px; }
+  .brand { display: flex; align-items: center; gap: 22px; }
+  .mark { width: 92px; height: 92px; background: #000; padding: 12px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .mark i { background: var(--ink); }
+  .mark i.off { background: rgba(242,240,237,.22); }
+  .mark i.seal { background: var(--l5); }
+  h1 { font-size: 104px; font-weight: 600; letter-spacing: -0.035em; line-height: 1; }
+  .tag { font-size: 44px; font-weight: 500; letter-spacing: -0.02em; line-height: 1.12; }
+  .tag span { color: var(--l5); }
+  .facts { display: flex; flex-direction: column; gap: 10px; font: 500 19px/1.2 "Geist Mono", ui-monospace, monospace; text-transform: uppercase; letter-spacing: .14em; color: rgba(242,240,237,.82); }
+  .facts b { color: var(--teal); font-weight: 500; }
+  .foot { position: absolute; right: 30px; bottom: 26px; background: var(--ground); padding: 6px 10px; font: 500 15px/1 "Geist Mono", ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; color: rgba(242,240,237,.6); }
+</style>
+</head>
+<body>
+  <div id="field" aria-hidden="true"></div>
+  <div class="mask"></div>
+  <div class="copy">
+    <div class="brand">
+      <div class="mark"><i></i><i class="off"></i><i></i><i class="off"></i><i class="seal"></i><i class="off"></i><i></i><i class="off"></i><i></i></div>
+      <h1>strongChar</h1>
+    </div>
+    <p class="tag">Train on data nobody can read.<br><span>Pay only for proven work.</span></p>
+    <div class="facts">
+      <div><b>ML-KEM-1024</b> sealed shards</div>
+      <div><b>ML-DSA-87</b> signed replays, checked on-chain</div>
+      <div><b>Bit-exact</b> training · cheaters slashed</div>
+    </div>
+  </div>
+  <div class="foot">validation loss 1.416 → 0.449 · job 3 · qorechain-diana</div>
+<script>
+// Rows of protocol words; each tile is lit by the job-3 loss curve (signed by both verifiers) drawn across the right side.
+const WORDS = ["SEAL","SHARD","REPLAY","COMMIT","REVEAL","VERIFY","ML-KEM","ML-DSA","STAKE","SLASH","EPOCH","GRAD","LOSS","WEIGHTS","PROOF","ROUND","NODE","HASH","QUORUM","SETTLE","FUSD","BERU","LATTICE","CIPHER","KEY","MERGE","GATE","SIGN","QOR","DIANA"];
+const curve = [1.4163, 0.4613, 0.4493];                 // job 3: before training, after round 1, after round 2
+const rows = 46, field = document.getElementById("field");
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const lossAt = (u) => { // u in 0..1 across the plot; smooth exponential decay through the three signed points
+  const x = u * 2, i = Math.min(1, Math.floor(x)), f = x - i;
+  const a = curve[i], b = curve[i + 1]; return a + (b - a) * (1 - Math.pow(1 - f, 2.2));
+};
+for (let r = 0; r < rows; r++) {
+  const row = document.createElement("div"); row.className = "row";
+  let x = 0;
+  while (x < 1560) {
+    const w = WORDS[Math.floor(rnd() * WORDS.length)], width = w.length * 7.3 + 12;
+    const u = Math.max(0, Math.min(1, (x - 820) / 680));
+    const yCurve = 5 + (1.45 - lossAt(u)) / (1.45 - 0.4) * (rows - 20);   // high loss near the top, falling to the right
+    const d = r - yCurve;
+    let l = 0;
+    if (x > 800) {
+      if (Math.abs(d) < 0.6) l = 7;
+      else if (Math.abs(d) < 1.4) l = 5;
+      else if (d > 0 && d < 3) l = 4;
+      else if (d > 0 && d < 6) l = rnd() < 0.55 ? 3 : 2;
+      else if (d > 0 && rnd() < 0.22) l = 1;
+    }
+    const t = document.createElement("span"); t.className = "t"; if (l) t.dataset.l = l; t.textContent = w;
+    row.appendChild(t); x += width + 4;
+  }
+  field.appendChild(row);
+}
+</script>
+</body>
+</html>
