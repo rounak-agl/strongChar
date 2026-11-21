@@ -51,11 +51,12 @@ def plan(csv_text: str, *, rounds: int, shards: int, quorum: int, hidden: int = 
     raw = from_csv(csv_text, task)
     sp = split(raw.card.rows, shards, "0.1", "0.1")
     data = standardise(raw, sp.train)
-    spec = make_spec(dataset_hash=data.card.hash, d_in=data.card.x_shape[0], n_out=data.card.classes,
+    n_out = data.card.classes or 1  # regression predicts one value
+    spec = make_spec(dataset_hash=data.card.hash, d_in=data.card.x_shape[0], n_out=n_out,
                      task=data.card.task, shards=list(sp.shards), val=sp.val, rounds=rounds, hidden=hidden,
                      steps=steps, batch_size=batch_size, lr=lr)
     loss = "ce" if data.card.task == "classification" else "mse"
-    ops = round_ops(steps, batch_size, data.card.x_shape[0], hidden, data.card.classes, loss)
+    ops = round_ops(steps, batch_size, data.card.x_shape[0], hidden, n_out, loss)
     budget = max(job_budget(ops, rounds, shards, price_units_per_gop), rounds * shards)
     return Plan(data, sp, spec, ops, budget, -(-ops // 10**9), quorum, shards)
 
