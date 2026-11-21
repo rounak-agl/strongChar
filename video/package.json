@@ -1,0 +1,30 @@
+{
+  "name": "@strongchar/video",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts StrongChar out/strongchar.mp4 --codec h264 --crf 18",
+    "still": "remotion still src/index.ts StrongChar out/still.png",
+    "typecheck": "tsc --noEmit",
+    "voice": "node --env-file=.env.local scripts/voice.mjs",
+    "sound": "node --env-file=.env.local scripts/sound.mjs"
+  },
+  "dependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.79.0",
+    "@remotion/captions": "4.0.545",
+    "@remotion/cli": "4.0.545",
+    "@remotion/google-fonts": "4.0.545",
+    "@remotion/media-utils": "4.0.545",
+    "@remotion/transitions": "4.0.545",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "remotion": "4.0.545"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.2",
+    "playwright": "1.65.1",
+    "typescript": "5.9.3"
+  }
+}
