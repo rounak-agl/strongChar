@@ -90,6 +90,19 @@ uv run strongchar-job post  data.csv --rounds 3 --shards 4   # seal, fund, follo
 
 The last CSV column is the target. Shards and the validation split are sealed to the two verifiers. The final model is sealed to you, and you score it on holdout rows that never leave your machine. Running across several computers is covered in [docs/multi-pc.md](docs/multi-pc.md).
 
+## Where encryption happens
+
+All sealing and opening runs on the machine of the party that holds the key: the owner, each node and each verifier. The coordinator in the middle never encrypts or decrypts anything; it only relays ciphertext.
+
+| Step | Who | Where |
+|---|---|---|
+| Seal the shards and the validation split (ML-KEM-1024 + X25519, QoreSeal) | Owner | `strongchar-job post`, on the owner's machine |
+| Open its shard and train; only checkpoint hashes go on chain | Node | `strongchar-node run`, on the node's machine |
+| Open, replay, re-seal next round's inputs to the seated nodes | Verifiers | `strongchar-verifier`, on each verifier's machine |
+| Open the final model and score it on the holdout | Owner | `strongchar-job post`, on the owner's machine |
+
+Every recipient is a QoreChain address. Before anything is sealed to it, its recipient card (ML-KEM-1024 and X25519 public keys, signed with both its secp256k1 and ML-DSA-87 keys) is checked against the ML-DSA-87 and ML-KEM-1024 keys that address registered on chain (`packages/qore/src/strongchar_qore/seal.py`).
+
 ## Security
 
 What is protected, from whom, and where it stops: [THREAT_MODEL.md](THREAT_MODEL.md).
@@ -101,6 +114,10 @@ Built with these open-source projects and QoreChain kits:
 - QoreChain Python SDKs: [`qorechain-sdk`](https://pypi.org/project/qorechain-sdk/), [`qorechain-qoreseal`](https://pypi.org/project/qorechain-qoreseal/), [`qorechain-qoresign`](https://pypi.org/project/qorechain-qoresign/), [`qorechain-pqc`](https://pypi.org/project/qorechain-pqc/)
 - [web3.py](https://github.com/ethereum/web3.py), [liboqs](https://github.com/open-quantum-safe/liboqs) (via `liboqs-python`)
 - [Foundry](https://github.com/foundry-rs/foundry) and [forge-std](https://github.com/foundry-rs/forge-std), [OpenZeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts)
+- [NumPy](https://numpy.org), [eth-abi](https://github.com/ethereum/eth-abi), [FastAPI](https://fastapi.tiangolo.com), [Uvicorn](https://www.uvicorn.org), [HTTPX](https://www.python-httpx.org), [Hatchling](https://hatch.pypa.io)
+- Web app: [Next.js](https://nextjs.org), [React](https://react.dev), [viem](https://viem.sh), [d3-scale and d3-shape](https://d3js.org), [Lucide](https://lucide.dev)
+- Servers: [Docker](https://www.docker.com), [gVisor](https://gvisor.dev) (sandbox for competition entries), [Caddy](https://caddyserver.com) (TLS for the coordinator)
+- Film: [Remotion](https://www.remotion.dev); narration and sound effects by [ElevenLabs](https://elevenlabs.io); recordings with [Playwright](https://playwright.dev); score synthesized with NumPy and [SciPy](https://scipy.org)
 - [uv](https://github.com/astral-sh/uv), [pytest](https://pytest.org), [pnpm](https://pnpm.io)
 
 The list grows as the build does. How AI was used is in [AI_USAGE.md](AI_USAGE.md).
