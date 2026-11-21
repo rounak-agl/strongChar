@@ -13,6 +13,9 @@ import { useOwner } from "@/lib/browser/session";
 
 const INPUT = "w-20 rounded-md border border-rule bg-surface px-2 py-1.5 font-mono text-sm text-ink outline-none focus:border-accent";
 
+// A fresh salt per quote: two jobs on the same data and settings still get different spec hashes and drafts.
+const newSalt = () => `0x${Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, "0")).join("")}`;
+
 export function PostJob() {
   const owner = useOwner();
   const [csv, setCsv] = useState<{ name: string; text: string } | null>(null);
@@ -37,7 +40,7 @@ export function PostJob() {
   const quote = (text = csv?.text) => {
     setErr(null); setP(null);
     if (!text) return;
-    try { setP(plan(text, { rounds, shards, quorum })); } catch (e) { setErr((e as Error).message); }
+    try { setP(plan(text, { rounds, shards, quorum, salt: newSalt() })); } catch (e) { setErr((e as Error).message); }
   };
 
   const post = async () => {

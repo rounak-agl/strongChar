@@ -192,12 +192,14 @@ export function encodeShard(c: Canonical, start: number, n: number): Uint8Array 
 // ------------------------------------------------------------------ spec, initial weights, price
 export type Spec = Record<string, unknown>;
 
-export function makeSpec(c: Canonical, s: Split, rounds: number, o: { hidden?: number; lr?: string; steps?: number; batchSize?: number } = {}): Spec {
+/** `salt` makes each job's spec, and so its spec hash and draft, unique even for the same data and settings. */
+export function makeSpec(c: Canonical, s: Split, rounds: number, o: { hidden?: number; lr?: string; steps?: number; batchSize?: number; salt?: string } = {}): Spec {
   return {
     version: 1, workload: "mlp-exact/1", datasetHash: c.hash, task: c.task,
     d_in: c.cols, n_out: c.classes ?? 1, hidden: o.hidden ?? HIDDEN, loss: c.task === "classification" ? "ce" : "mse", lr: o.lr ?? "0.1",
     steps: o.steps ?? 40, checkpoints: 4, batch_size: o.batchSize ?? 32, initSeed: 0,
     shards: s.shards, val: s.val, rounds, gate: { relTol: "0.1", absTol: "0.01" },
+    ...(o.salt !== undefined ? { salt: o.salt } : {}),
   };
 }
 
@@ -251,12 +253,12 @@ export type Plan = {
   opsPerRound: bigint; budget: bigint; refWork: number; quorum: number; maxNodes: number;
 };
 
-export function plan(csv: string, o: { rounds: number; shards: number; quorum: number; priceUnitsPerGop?: bigint }): Plan {
+export function plan(csv: string, o: { rounds: number; shards: number; quorum: number; priceUnitsPerGop?: bigint; salt?: string }): Plan {
   if (!(1 <= o.quorum && o.quorum <= o.shards)) throw new DatasetError("quorum must be between 1 and the number of shards");
   const raw = fromCsv(csv);
   const sp = split(raw.rows, o.shards);
   const data = standardise(raw, sp.train);
-  const spec = makeSpec(data, sp, o.rounds);
+  const spec = makeSpec(data, sp, o.rounds, { salt: o.salt });
   const h = specHash(spec);
   const nOut = data.classes ?? 1;
   const ops = roundOps(40, 32, data.cols, HIDDEN, nOut, data.task === "classification" ? "ce" : "mse");

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import secrets
 from pathlib import Path
 
 import numpy as np
@@ -24,7 +25,8 @@ from .client import Coordinator
 
 def _plan(a) -> owner.Plan:
     return owner.plan(Path(a.csv).read_text(), rounds=a.rounds, shards=a.shards, quorum=a.quorum, hidden=a.hidden,
-                      steps=a.steps, batch_size=a.batch, price_units_per_gop=int(float(a.price) * 10**6))
+                      steps=a.steps, batch_size=a.batch, price_units_per_gop=int(float(a.price) * 10**6),
+                      salt=("0x" + secrets.token_hex(16)) if a.salt is None else (a.salt or None))
 
 
 def main() -> None:
@@ -41,12 +43,18 @@ def main() -> None:
         sp.add_argument("--steps", type=int, default=40, help="training steps per node per round")
         sp.add_argument("--batch", type=int, default=32)
         sp.add_argument("--price", default="1", help="fUSD per Gop of training (default 1)")
+        sp.add_argument("--salt", default=None, help="hex salt for the spec (default: random, so every job is unique)")
         sp.add_argument("--name", default="data-owner", help="your actor name in the key store")
         sp.add_argument("--coordinator", default=os.environ.get("STRONGCHAR_COORDINATOR", "http://127.0.0.1:8700"))
         if cmd == "model":
             sp.add_argument("--job", type=int, required=True)
             sp.add_argument("--out", default="model.npy")
     a = ap.parse_args()
+    if a.cmd == "model" and a.salt is None:
+        # Re-derive this job's spec: its salt is in the draft stored under the spec hash on chain.
+        params, _ = Contracts().job(a.job)
+        draft = Coordinator(a.coordinator, None).get_draft("0x" + bytes(params[0]).hex())
+        a.salt = draft["spec"].get("salt", "")
     p = _plan(a)
     print(f"{p.data.card.rows:,} rows, {p.data.card.x_shape[0]} features, {p.data.card.task}; "
           f"{p.ops_per_round / 1e9:.4f} Gop per node per round")

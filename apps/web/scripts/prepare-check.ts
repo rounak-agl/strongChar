@@ -5,7 +5,7 @@ import { keccak256, type Hex } from "viem";
 import { fsum, plan } from "../lib/browser/prepare";
 
 type Case = {
-  name: string; rounds: number; shards: number; quorum: number; csv: string; datasetHash: Hex; task: string; classes: number | null;
+  name: string; salt?: string; rounds: number; shards: number; quorum: number; csv: string; datasetHash: Hex; task: string; classes: number | null;
   dIn: number; spec: unknown; specHash: Hex; initialWeightsHash: Hex; shardTableHash: Hex; shardHashes: Hex[]; valHash: Hex;
   holdoutHash: Hex; opsPerRound: number; budget: number; refWork: number; maxNodes: number;
 };
@@ -25,7 +25,7 @@ eq("fsum half-even", fsum([2 ** 53, 1, 2 ** -60]), 2 ** 53 + 2);
 
 for (const c of cases) {
   console.log(c.name);
-  const p = plan(c.csv, { rounds: c.rounds, shards: c.shards, quorum: c.quorum });
+  const p = plan(c.csv, { rounds: c.rounds, shards: c.shards, quorum: c.quorum, salt: c.salt });
   eq("datasetHash", p.data.hash, c.datasetHash);
   eq("task", p.data.task, c.task);
   eq("classes", p.data.classes, c.classes);

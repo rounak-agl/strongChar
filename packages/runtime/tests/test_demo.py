@@ -23,3 +23,14 @@ def test_price_scales_with_compute_seats_and_rounds():
     tiny = owner.plan(csv, rounds=3, shards=4, quorum=2, price_units_per_gop=1)
     assert tiny.budget == 3 * 4  # never below one base unit per seat per round
     assert base.ref_work == 1  # under a Gop per round still credits one reference second
+
+
+def test_salt_keeps_jobs_on_the_same_data_apart():
+    csv = presets.health_csv(1_000)
+    plain = owner.plan(csv, rounds=1, shards=2, quorum=2)
+    a = owner.plan(csv, rounds=1, shards=2, quorum=2, salt="0x01")
+    b = owner.plan(csv, rounds=1, shards=2, quorum=2, salt="0x02")
+    assert len({plain.spec.hash, a.spec.hash, b.spec.hash}) == 3  # each job gets its own draft
+    assert owner.plan(csv, rounds=1, shards=2, quorum=2, salt="0x01").spec.hash == a.spec.hash  # and can be re-derived
+    assert "salt" not in plain.spec.raw  # specs without a salt hash exactly as before
+    assert a.spec.initial_weights_hash() != b.spec.initial_weights_hash()  # weights are bound to their own spec

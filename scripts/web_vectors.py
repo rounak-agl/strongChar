@@ -52,6 +52,8 @@ CASES = [
      "rounds": 3, "shards": 5, "quorum": 3},
     {"name": "regression", "seed": 3, "rows": 1100, "cols": 4, "task": "regression", "header": True,
      "rounds": 1, "shards": 3, "quorum": 2},
+    {"name": "health-like with a per-job salt", "seed": 1, "rows": 1000, "cols": 6, "task": "classification", "header": True,
+     "rounds": 2, "shards": 4, "quorum": 2, "salt": "0x5a17005a17005a17005a17005a17005a"},
 ]
 
 
@@ -59,12 +61,12 @@ def main() -> None:
     out = []
     for c in CASES:
         text = csv_case(c["seed"], c["rows"], c["cols"], c["task"], c["header"])
-        p = plan(text, rounds=c["rounds"], shards=c["shards"], quorum=c["quorum"])
+        p = plan(text, rounds=c["rounds"], shards=c["shards"], quorum=c["quorum"], salt=c.get("salt"))
         pieces = cut(p.data, p.split)
         ha, hn = p.split.holdout
         holdout = p.data.x[ha:ha + hn].tobytes() + p.data.y[ha:ha + hn].tobytes()
         out.append({
-            **{k: c[k] for k in ("name", "rounds", "shards", "quorum")},
+            **{k: c[k] for k in ("name", "rounds", "shards", "quorum")}, **({"salt": c["salt"]} if "salt" in c else {}),
             "csv": text,
             "datasetHash": p.data.card.hash,
             "task": p.data.card.task, "classes": p.data.card.classes, "dIn": p.data.card.x_shape[0],
