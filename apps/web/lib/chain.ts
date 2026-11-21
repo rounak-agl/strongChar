@@ -1,15 +1,8 @@
 // Server-side chain reads over viem: jobs, rounds, seats, settlements (with their tx hashes) and nodes.
-import { createPublicClient, defineChain, http, type Address, type Hex } from "viem";
+import { diana } from "./evm-chain";
+import { createPublicClient, http, type Address, type Hex } from "viem";
 import { deployment, jobMarketAbi, nodeRegistryAbi } from "./deployment";
 import { events } from "./logs";
-
-export const diana = defineChain({
-  id: 9800,
-  name: "QoreChain diana",
-  nativeCurrency: { name: "QOR", symbol: "QOR", decimals: 18 },
-  rpcUrls: { default: { http: ["https://evm-testnet.qore.host"] } },
-  blockExplorers: { default: { name: "QoreScan", url: "https://explore.qore.network" } },
-});
 
 export const client = createPublicClient({ chain: diana, transport: http(undefined, { fetchOptions: { headers: { "user-agent": "strongchar-web/0.1" } } }) });
 export const explorerTx = (h: string) => `https://explore.qore.network/tx/${h}`;

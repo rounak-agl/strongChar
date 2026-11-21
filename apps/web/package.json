@@ -8,13 +8,16 @@
     "build": "next build",
     "start": "next start -p 3100",
     "typecheck": "tsc --noEmit",
-    "check:prepare": "tsx scripts/prepare-check.ts"
+    "check:prepare": "tsx scripts/prepare-check.ts",
+    "check:qorex": "tsx scripts/qorex-check.ts"
   },
   "dependencies": {
+    "@qorechain/evm": "0.14.0",
     "@qorechain/pqc": "0.2.3",
     "@qorechain/qoreseal": "0.1.0",
     "@qorechain/qoresign": "0.2.0",
     "@qorechain/qorex-types": "0.1.0",
+    "@qorechain/react": "0.14.0",
     "@qorechain/sdk": "0.14.0",
     "d3-scale": "4.0.2",
     "d3-shape": "3.2.0",
@@ -25,6 +28,7 @@
     "viem": "^2.58.0"
   },
   "devDependencies": {
+    "@qorechain/qorex-wallet-mock": "0.1.0",
     "@tailwindcss/postcss": "^4.3.5",
     "@types/d3-scale": "4.0.9",
     "@types/d3-shape": "3.1.7",

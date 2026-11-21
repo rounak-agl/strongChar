@@ -5,6 +5,7 @@ import { Layers } from "lucide-react";
 import { draft, matcher } from "@/lib/api";
 import { explorerTx, getJob, getRound, jobCount, jobEvents, payments } from "@/lib/chain";
 import { LossChart } from "@/components/charts";
+import { CheckSignatures } from "@/components/jobs/check-signatures";
 import { OpenModel } from "@/components/jobs/open-model";
 import { CoverHead, RoundLinks } from "@/components/client";
 import { Page } from "@/components/page";
@@ -101,6 +102,8 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
           </tbody>
         </table>
       </Card>
+
+      <CheckSignatures settled={ev.settled.map((e) => ({ round: e.round, tx: e.tx }))} />
     </Page>
   );
 }
