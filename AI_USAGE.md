@@ -31,6 +31,7 @@ strongChar is built by one person (Rounak) working with an AI coding agent (Clau
 | 19 Nov | Phase 4 read-only web app: tokens, components, live jobs, nodes and sealed-store pages | — |
 | 19 Nov | Deploy files (service image, per-server compose, per-actor key files); competition pages; found that diana caps log queries at 10,000 blocks and fixed every reader; found and fixed a competition script leaking test features through its published crash message; threat model | Asked for continuous work across phases |
 | 18 Nov | AWS servers following AWS's EC2 launch guidance; found the Free plan refuses `t4g.medium` and proposed alternatives with prices; bootstrap script with gVisor | Approved spending, chose two small worker servers |
+| 21 Nov | Showcase film: a Remotion project replaying live job 4 from the servers' own logs; narration and sound effects generated with ElevenLabs (voice: ElevenLabs, elevenlabs.io); the score composed in code to the scene timeline; screen recordings of the live web app with Playwright. Opening-shot drafts were generated with Google Flow and then replaced by an animation built in code, so the final film contains no generated video | Directed every revision: a stronger hook, smoother camera, livelier training and job-posting scenes, quieter mid-film music, a new opening; approved the result |
 
 ## Where AI was not trusted blindly
 
