@@ -98,10 +98,16 @@ All sealing and opening runs on the machine of the party that holds the key: the
 
 | Step | Who | Where |
 |---|---|---|
-| Seal the shards and the validation split (ML-KEM-1024 + X25519, QoreSeal) | Owner | `strongchar-job post`, on the owner's machine |
+| Seal the shards and the validation split (ML-KEM-1024 + X25519, QoreSeal) | Owner | the web app's **Post a job** page, in the owner's browser, or `strongchar-job post` |
 | Open its shard and train; only checkpoint hashes go on chain | Node | `strongchar-node run`, on the node's machine |
 | Open, replay, re-seal next round's inputs to the seated nodes | Verifiers | `strongchar-verifier`, on each verifier's machine |
-| Open the final model and score it on the holdout | Owner | `strongchar-job post`, on the owner's machine |
+| Open the final model and score it on the holdout | Owner | the job's page in the owner's browser, or `strongchar-job post` |
+
+In the browser, the owner's keys come from a recovery phrase created on the **Your account** page and kept in
+IndexedDB, encrypted with a passphrase (PBKDF2-SHA-256, 600,000 rounds, AES-256-GCM). The QoreX wallet can't hold
+QoreSeal keys or sign arbitrary messages yet, so it only funds that account. The same phrase gives the same keys in the
+command-line tools. Job preparation in the browser is byte for byte the Python planner: CI recomputes
+`vectors/web/prepare.json` with the browser code on every push. The first job posted this way is job 5 on diana.
 
 Every recipient is a QoreChain address. Before anything is sealed to it, its recipient card (ML-KEM-1024 and X25519 public keys, signed with both its secp256k1 and ML-DSA-87 keys) is checked against the ML-DSA-87 and ML-KEM-1024 keys that address registered on chain (`packages/qore/src/strongchar_qore/seal.py`).
 
@@ -114,10 +120,11 @@ What is protected, from whom, and where it stops: [THREAT_MODEL.md](THREAT_MODEL
 Built with these open-source projects and QoreChain kits:
 
 - QoreChain Python SDKs: [`qorechain-sdk`](https://pypi.org/project/qorechain-sdk/), [`qorechain-qoreseal`](https://pypi.org/project/qorechain-qoreseal/), [`qorechain-qoresign`](https://pypi.org/project/qorechain-qoresign/), [`qorechain-pqc`](https://pypi.org/project/qorechain-pqc/)
+- QoreChain TypeScript kits in the web app: [`@qorechain/sdk`](https://www.npmjs.com/package/@qorechain/sdk), [`@qorechain/qoreseal`](https://www.npmjs.com/package/@qorechain/qoreseal), [`@qorechain/qoresign`](https://www.npmjs.com/package/@qorechain/qoresign), [`@qorechain/pqc`](https://www.npmjs.com/package/@qorechain/pqc), [`@qorechain/qorex-types`](https://www.npmjs.com/package/@qorechain/qorex-types)
 - [web3.py](https://github.com/ethereum/web3.py), [liboqs](https://github.com/open-quantum-safe/liboqs) (via `liboqs-python`)
 - [Foundry](https://github.com/foundry-rs/foundry) and [forge-std](https://github.com/foundry-rs/forge-std), [OpenZeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts)
 - [NumPy](https://numpy.org), [eth-abi](https://github.com/ethereum/eth-abi), [FastAPI](https://fastapi.tiangolo.com), [Uvicorn](https://www.uvicorn.org), [HTTPX](https://www.python-httpx.org), [Hatchling](https://hatch.pypa.io)
-- Web app: [Next.js](https://nextjs.org), [React](https://react.dev), [viem](https://viem.sh), [d3-scale and d3-shape](https://d3js.org), [Lucide](https://lucide.dev)
+- Web app: [tsx](https://tsx.is) (CI checks), [Next.js](https://nextjs.org), [React](https://react.dev), [viem](https://viem.sh), [d3-scale and d3-shape](https://d3js.org), [Lucide](https://lucide.dev)
 - Servers: [Docker](https://www.docker.com), [gVisor](https://gvisor.dev) (sandbox for competition entries), [Caddy](https://caddyserver.com) (TLS for the coordinator)
 - Film: [Remotion](https://www.remotion.dev); narration and sound effects by [ElevenLabs](https://elevenlabs.io); recordings with [Playwright](https://playwright.dev); score synthesized with NumPy and [SciPy](https://scipy.org)
 - [uv](https://github.com/astral-sh/uv), [pytest](https://pytest.org), [pnpm](https://pnpm.io)

@@ -8,13 +8,20 @@ const csp = [
   `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data:",
-  `connect-src 'self' ${api} https://evm-testnet.qore.host https://api-testnet.qore.host`,
+  // The chain's REST API sends no CORS headers, so the browser reaches it through /api/chain (same origin).
+  `connect-src 'self' ${api} https://evm-testnet.qore.host`,
   "frame-ancestors 'none'",
+  "base-uri 'none'",
+  "form-action 'self'",
 ].join("; ");
 
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  async rewrites() {
+    // Development only: the page runs on localhost, which the coordinator's CORS list doesn't include.
+    return process.env.NODE_ENV === "development" ? [{ source: "/coord/:path*", destination: `${api}/:path*` }] : [];
+  },
   async headers() {
     return [{
       source: "/(.*)",

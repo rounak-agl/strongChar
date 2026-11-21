@@ -7,9 +7,15 @@
     "dev": "next dev -p 3100",
     "build": "next build",
     "start": "next start -p 3100",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check:prepare": "tsx scripts/prepare-check.ts"
   },
   "dependencies": {
+    "@qorechain/pqc": "0.2.3",
+    "@qorechain/qoreseal": "0.1.0",
+    "@qorechain/qoresign": "0.2.0",
+    "@qorechain/qorex-types": "0.1.0",
+    "@qorechain/sdk": "0.14.0",
     "d3-scale": "4.0.2",
     "d3-shape": "3.2.0",
     "lucide-react": "^1.75.0",
@@ -26,6 +32,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "tailwindcss": "^4.3.5",
+    "tsx": "4.20.6",
     "typescript": "^5.9.3"
   }
 }

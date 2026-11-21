@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import {
-  BookOpen, Cpu, Home, Layers, Lock, Menu, PanelLeftClose, PanelLeftOpen, RefreshCw, Rocket, Trophy, X, type LucideIcon,
+  BookOpen, Cpu, Home, KeyRound, Layers, Lock, Menu, PanelLeftClose, PanelLeftOpen, RefreshCw, Rocket, Trophy, X, type LucideIcon,
 } from "lucide-react";
 import { BrandMark } from "./brand";
 import { Crumbs, cx } from "./primitives";
@@ -17,6 +17,7 @@ const NAV: NavItem[] = [
   { href: "/nodes", label: "nodes", icon: Cpu, match: (p) => p.startsWith("/nodes") },
   { href: "/compete", label: "competitions", icon: Trophy, match: (p) => p.startsWith("/compete") },
   { href: "/sealed", label: "what the server sees", icon: Lock, match: (p) => p.startsWith("/sealed") },
+  { href: "/account", label: "your account", icon: KeyRound, match: (p) => p.startsWith("/account") },
 ];
 const DOCS: NavItem[] = [
   { href: "/how", label: "how it works", icon: BookOpen, match: (p) => p.startsWith("/how") },
