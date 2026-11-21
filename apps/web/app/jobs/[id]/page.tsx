@@ -5,6 +5,7 @@ import { Layers } from "lucide-react";
 import { draft, matcher } from "@/lib/api";
 import { explorerTx, getJob, getRound, jobCount, jobEvents, payments } from "@/lib/chain";
 import { LossChart } from "@/components/charts";
+import { OpenModel } from "@/components/jobs/open-model";
 import { CoverHead, RoundLinks } from "@/components/client";
 import { Page } from "@/components/page";
 import { Card, JobStatusPill, Money, RoundStatusPill, SectionTitle, THead, TH, TD, HashChip } from "@/components/primitives";
@@ -51,6 +52,8 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
         <LossChart points={curve} total={job.rounds} from={0} height={220} />
         <RoundLinks base={`/jobs/${id}/rounds`} total={job.rounds} rounds={rounds.map((r) => ({ round: r.id, status: roundStatus(r) }))} />
       </Card>
+
+      <OpenModel jobId={id} owner={job.owner} rounds={job.rounds} finished={status === "completed"} />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="flex flex-col gap-3 p-5">

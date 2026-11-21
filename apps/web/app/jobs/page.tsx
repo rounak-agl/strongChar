@@ -1,7 +1,7 @@
 // Jobs: every round's outcome as one ledger strip, then each job as an index card with its own mosaic poster.
-import { Layers } from "lucide-react";
+import { Layers, Upload } from "lucide-react";
 import { Page } from "@/components/page";
-import { Card, JobStatusPill } from "@/components/primitives";
+import { ButtonLink, Card, JobStatusPill } from "@/components/primitives";
 import { Empty, PosterLink } from "@/components/client";
 import { formatToken } from "@/lib/money";
 import { cx } from "@/lib/cx";
@@ -25,6 +25,7 @@ export default async function Jobs() {
   const live = all.filter((x) => ["committing", "revealing", "verifying"].includes(x.status)).length;
   return (
     <Page crumbs={[{ label: "jobs" }, { href: "/how", label: "How training works" }]} icon={Layers} title="Jobs"
+          actions={<ButtonLink href="/jobs/new" variant="primary" icon={Upload}>Post a job</ButtonLink>}
           meta={<>Each job trains on data sealed to the two verifiers; every round is replayed bit for bit before anyone is paid.</>}>
       <Card className="flex flex-col gap-3 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
