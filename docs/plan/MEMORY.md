@@ -97,7 +97,7 @@ The project's running log. Update at the end of every working session. Newest lo
 | Q12 | Second-half challenges and any rule or prize changes | Workshop 20 Nov; re-read /rules on 20 and 27 Nov | Open |
 | Q13 | Backend VM available? | D15 | Closed |
 | Q14 | Do sandbox predictions match across arm64 and x86? | Spike S5: same arch always identical; across arch raw float bits differ for BLAS-based models (logreg, MLP, ridge) but canonicalised outputs (labels; values rounded to 6 decimals) match for all four models tried | Closed (D40) |
-| Q15 | Benchmark threshold: how slow is too slow? | Measure in Phase 2 on the worker VM and the laptop | Open |
+| Q15 | Benchmark threshold: how slow is too slow? | Measure in Phase 2 on the worker VM and the laptop | Closed (22 Nov): live nodes benchmark at about 6 ms against a 600 s floor (`STRONGCHAR_BENCHMARK_FLOOR_S`), so the floor is only a sanity cap. The working limit is the commit window: a node that can't finish misses its commit and is benched (D45); seating prefers the fastest benchmark |
 | Q16 | Does QoreX hold QoreSeal (ML-KEM) keys and open envelopes for a dApp? | `@qorechain/qorex-types` 0.1.0 provider types, `@qorechain/qoreseal` key-backup guide (21 Nov) | Closed: no. QoreX exposes only enable, getKey, signDirect, signAndBroadcast, listAccounts, experimentalSuggestChain; no KEM methods; signArbitrary refused; EVM signing not supported yet. Use the ARCHITECTURE section 4 fallback (browser-held seed) |
 | Q17 | Does the registration "level" (set to Quantum Pass) limit the categories a person can win in? | Ask in Discord #builders | Open, Rounak |
 
