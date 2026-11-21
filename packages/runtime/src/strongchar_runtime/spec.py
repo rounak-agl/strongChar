@@ -37,11 +37,13 @@ class JobSpec:
 
 def make_spec(*, dataset_hash: str, d_in: int, n_out: int, task: str, shards: list[tuple[int, int]],
               val: tuple[int, int], rounds: int, hidden: int = 16, lr: str = "0.1", steps: int = 40,
-              checkpoints: int = 4, batch_size: int = 32, init_seed: int = 0) -> JobSpec:
+              checkpoints: int = 4, batch_size: int = 32, init_seed: int = 0, salt: str | None = None) -> JobSpec:
+    """`salt` makes each job's spec, and so its spec hash and draft, unique even for the same data and settings."""
     return JobSpec({
         "version": 1, "workload": "mlp-exact/1", "datasetHash": dataset_hash, "task": task,
         "d_in": d_in, "n_out": n_out, "hidden": hidden, "loss": "ce" if task == "classification" else "mse", "lr": lr,
         "steps": steps, "checkpoints": checkpoints, "batch_size": batch_size, "initSeed": init_seed,
         "shards": [list(s) for s in shards], "val": list(val), "rounds": rounds,
         "gate": {"relTol": "0.1", "absTol": "0.01"},
+        **({"salt": salt} if salt is not None else {}),
     })

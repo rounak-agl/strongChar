@@ -44,7 +44,7 @@ class Plan:
 
 
 def plan(csv_text: str, *, rounds: int, shards: int, quorum: int, hidden: int = 16, steps: int = 40,
-         batch_size: int = 32, lr: str = "0.1", price_units_per_gop: int = 10**6, task: str | None = None) -> Plan:
+         batch_size: int = 32, lr: str = "0.1", price_units_per_gop: int = 10**6, task: str | None = None, salt: str | None = None) -> Plan:
     """Canonicalise the CSV (last column is the target), split it and price the job. Nothing leaves the machine."""
     if not 1 <= quorum <= shards:
         raise ValueError("quorum must be between 1 and the number of shards")
@@ -54,7 +54,7 @@ def plan(csv_text: str, *, rounds: int, shards: int, quorum: int, hidden: int = 
     n_out = data.card.classes or 1  # regression predicts one value
     spec = make_spec(dataset_hash=data.card.hash, d_in=data.card.x_shape[0], n_out=n_out,
                      task=data.card.task, shards=list(sp.shards), val=sp.val, rounds=rounds, hidden=hidden,
-                     steps=steps, batch_size=batch_size, lr=lr)
+                     steps=steps, batch_size=batch_size, lr=lr, salt=salt)
     loss = "ce" if data.card.task == "classification" else "mse"
     ops = round_ops(steps, batch_size, data.card.x_shape[0], hidden, n_out, loss)
     budget = max(job_budget(ops, rounds, shards, price_units_per_gop), rounds * shards)
