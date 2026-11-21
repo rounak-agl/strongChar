@@ -9,7 +9,8 @@
     "start": "next start -p 3100",
     "typecheck": "tsc --noEmit",
     "check:prepare": "tsx scripts/prepare-check.ts",
-    "check:qorex": "tsx scripts/qorex-check.ts"
+    "check:qorex": "tsx scripts/qorex-check.ts",
+    "smoke": "tsx scripts/smoke.ts"
   },
   "dependencies": {
     "@qorechain/evm": "0.14.0",
@@ -35,6 +36,7 @@
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "playwright": "1.65.1",
     "tailwindcss": "^4.3.5",
     "tsx": "4.20.6",
     "typescript": "^5.9.3"
