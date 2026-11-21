@@ -1,7 +1,7 @@
 // Competitions: each one as an index card with its own mosaic poster, its phase, prize and entry count.
 import { Trophy } from "lucide-react";
 import { Page } from "@/components/page";
-import { Pill } from "@/components/primitives";
+import { ButtonLink, Pill } from "@/components/primitives";
 import { Empty, PosterLink } from "@/components/client";
 import { formatToken } from "@/lib/money";
 import { competitionCount, competitionsDeployed, getCompetition, getEntries, meta, phase } from "@/lib/compete";
@@ -18,9 +18,10 @@ export default async function Compete() {
   }));
   return (
     <Page crumbs={[{ label: "competitions" }]} icon={Trophy} title="Competitions"
+          actions={competitionsDeployed ? <ButtonLink href="/compete/new" variant="primary">Host a competition</ButtonLink> : undefined}
           meta={<>Entrants seal their scripts to two verifiers. Both run every script in the same locked-down sandbox, and only verdicts and scores both signed with ML-DSA-87 reach the contract. The hidden labels are committed when a competition opens and revealed on-chain at the end, so anyone can recompute the ranking.</>}>
       {!competitionsDeployed && <Empty icon="compete" poster="EMPTY" title="Not deployed">The Competitions contract isn&apos;t on diana yet.</Empty>}
-      {competitionsDeployed && n === 0 && <Empty icon="compete" poster="EMPTY" title="No competitions yet">Host one with scripts/demo_compete.py.</Empty>}
+      {competitionsDeployed && n === 0 && <Empty icon="compete" poster="EMPTY" title="No competitions yet">Host one from this browser, or with scripts/demo_compete.py.</Empty>}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {rows.map(({ c, entries, m }) => {
           const p = phase(c);

@@ -59,6 +59,14 @@ export class Coordinator {
     return (await ok<{ specHash: string }>(r)).specHash;
   }
 
+  /** Data that is public by design, such as a competition's training rows. ASCII text only. */
+  async putPublic(text: string, name: string): Promise<string> {
+    const r = await fetch(`${API}/v1/public`, {
+      method: "POST", headers: { ...(await this.auth()), "x-name": name, "content-type": "text/plain" }, body: text,
+    });
+    return (await ok<{ id: string }>(r)).id;
+  }
+
   async getBlob(id: string): Promise<string> {
     return (await ok<{ envelope: string }>(await fetch(`${API}/v1/blobs/${id}`, { headers: await this.auth() }))).envelope;
   }

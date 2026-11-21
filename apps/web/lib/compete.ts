@@ -18,7 +18,7 @@ export type Entry = {
   index: number; entrant: Address; scriptHash: Hex; envelopeHash: Hex; validity: (typeof VALIDITY)[number];
   predHash: Hex; score: bigint;
 };
-export type Meta = { title?: string; task?: string; metric?: string; rows?: number; classes?: number; train?: string; timeoutS?: number };
+export type Meta = { title?: string; task?: string; metric?: string; rows?: number; classes?: number; train?: string; timeoutS?: number; target?: string };
 
 async function read<T>(functionName: string, args: unknown[] = []): Promise<T> {
   return (await client.readContract({ address: addr!, abi: competitionsAbi, functionName, args } as any)) as T;
