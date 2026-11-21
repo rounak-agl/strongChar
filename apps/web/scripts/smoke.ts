@@ -19,7 +19,7 @@ const watch = (p: Page) => p.on("pageerror", (e) => errors.push(`${p.url()}: ${e
 try {
   const page = await ctx.newPage();
   watch(page);
-  for (const path of ["/", "/jobs", "/nodes", "/sealed", "/how", "/start", "/compete", "/jobs/new", `/jobs/${SETTLED_JOB}`]) {
+  for (const path of ["/", "/jobs", "/nodes", "/sealed", "/how", "/start", "/compete", "/jobs/new", "/compete/new", "/compete/2", `/jobs/${SETTLED_JOB}`]) {
     const r = await page.goto(BASE + path, { waitUntil: "networkidle", timeout: 60_000 });
     ok(`${path} loads`, r?.status() === 200, String(r?.status()));
   }

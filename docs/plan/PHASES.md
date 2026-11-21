@@ -91,10 +91,10 @@ Cut line (cut item 1, first to go): if behind on 26 Nov evening, competitions be
 
 Tasks
 - [x] P4.1 (19 Nov) Visual style: palette, type, mark (DESIGN section 2).
-- [ ] P4.2 Next.js app with `create-qorechain-dapp` packages; QoreX RainbowKit connector; SIWQ.
+- [x] P4.2 (19–22 Nov: Next.js app on the QoreChain SDK, EVM, React, QoreSeal, QoreSign and QoreX kits; QoreX funds the browser account. RainbowKit dropped because QoreX can't sign EVM transactions yet (Q16); SIWQ dropped by decision on 21 Nov: the coordinator login is an ML-DSA-87 challenge) Next.js app with `create-qorechain-dapp` packages; QoreX RainbowKit connector; SIWQ.
 - [~] P4.3 (19 Nov: tokens, fonts, `SealChip`, `ProofStamp`, `RoundTimeline` done; `WindowMeter`, `KeyCard`, `SandboxReport`, `Leaderboard` pending) Tokens, fonts, signature components (`SealChip`, `ProofStamp`, `WindowMeter`, `RoundTimeline`, `KeyCard`, `SandboxReport`, `Leaderboard`).
-- [~] P4.4 (19–20 Nov: read-only `/jobs`, `/jobs/[id]`, `/nodes`, `/compete`, `/compete/[id]`, `/sealed`, `/how`, landing on live data, with event reads in 10k-block windows; wallet flows wait on Q16) `/start` key setup flow (with KEM key backup per S3); `/jobs` flows with client-side sealing and final-model opening; `/compete` flows with client-side script sealing; `/sealed`; landing; profile; `/how`. Chain fallback when the API is down.
-- [ ] P4.5 Playwright smoke run with the QoreX mock wallet.
+- [~] P4.4 (21–22 Nov: in the browser, key setup with a passphrase-encrypted phrase, post and fund a sealed job, open and score the model (run live: job 5). Host, enter, reveal early and claim for competitions built 22 Nov, label commitment checked against Python; live run pending. 19–20 Nov: read-only `/jobs`, `/jobs/[id]`, `/nodes`, `/compete`, `/compete/[id]`, `/sealed`, `/how`, landing on live data, with event reads in 10k-block windows; wallet flows wait on Q16) `/start` key setup flow (with KEM key backup per S3); `/jobs` flows with client-side sealing and final-model opening; `/compete` flows with client-side script sealing; `/sealed`; landing; profile; `/how`. Chain fallback when the API is down.
+- [x] P4.5 (22 Nov: `apps/web/scripts/smoke.ts`, daily against the live site in `.github/workflows/smoke.yml`) Playwright smoke run with the QoreX mock wallet.
 
 Exit check: from a fresh browser profile, a person can sign in, set up keys, post and fund a sealed job, watch it settle, open the model, host a competition and submit an entry, all against diana.
 
@@ -115,8 +115,8 @@ Cut line (cut item 5): if the main entry isn't through Phase 4 exit by 28 Nov ev
 - [x] P6.2 (20 Nov, curl-based; nuclei/ffuf not installed: needs Rounak's OK to download. Fixed: public OpenAPI schema removed, HSTS and CSP added) Self-scan of our own edge host only (httpx, nuclei, ffuf): no exposed admin routes, debug pages or default files; fix findings.
 - [x] P6.3 (20 Nov: job 3 and competition 2 on the AWS stack, both settled) Run one fresh job and one fresh competition on the live stack; keep them visible for judges.
 - [~] P6.4 (20 Nov: THREAT_MODEL.md written and linked from the README; AI_USAGE.md current; README final pass and docs/how-it-works.md pending) README (what, why, trust model, how it's made, credits, run it, tx hashes, gas figures, limits), THREAT_MODEL.md, AI_USAGE.md final pass, docs/how-it-works.md.
-- [ ] P6.5 Cover image 1600×900.
-- [ ] P6.6 Video ≤3:00, recorded against live testnet:
+- [x] P6.5 (docs/cover/cover.png, on the project page) Cover image 1600×900.
+- [x] P6.6 (21 Nov: 2:17 film replaying live job 4, on YouTube and the project page) Video ≤3:00, recorded against live testnet:
   - 0:00–0:20 hook: data that trains AI today is readable after Q-Day.
   - 0:20–1:10 owner seals a dataset in the browser; `/sealed` shows the edge server only holds ciphertext.
   - 1:10–1:50 round runs, cheater caught, `ProofStamp` on the verdict tx.

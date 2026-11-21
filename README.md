@@ -102,12 +102,17 @@ All sealing and opening runs on the machine of the party that holds the key: the
 | Open its shard and train; only checkpoint hashes go on chain | Node | `strongchar-node run`, on the node's machine |
 | Open, replay, re-seal next round's inputs to the seated nodes | Verifiers | `strongchar-verifier`, on each verifier's machine |
 | Open the final model and score it on the holdout | Owner | the job's page in the owner's browser, or `strongchar-job post` |
+| Seal a competition's test rows, labels and salt to both verifiers | Host | **Host a competition** in the host's browser, or `scripts/demo_compete.py` |
+| Seal a competition script to both verifiers | Entrant | the competition's page in the entrant's browser, or `scripts/demo_compete.py` |
+| Open a script and run it in the gVisor sandbox | Verifiers | `strongchar-verifier`, on each verifier's machine |
 
 In the browser, the owner's keys come from a recovery phrase created on the **Your account** page and kept in
 IndexedDB, encrypted with a passphrase (PBKDF2-SHA-256, 600,000 rounds, AES-256-GCM). The QoreX wallet can't hold
 QoreSeal keys or sign arbitrary messages yet, so it only funds that account. The same phrase gives the same keys in the
 command-line tools. Job preparation in the browser is byte for byte the Python planner: CI recomputes
 `vectors/web/prepare.json` with the browser code on every push. The first job posted this way is job 5 on diana.
+
+Every job spec carries a random salt, so two jobs on the same data and settings never share a spec hash or a draft.
 
 Anyone can re-check a job's settlements without trusting strongChar's servers: **Check the signatures yourself** on a
 job's page rebuilds the bytes both verifiers signed for each round, fetches their ML-DSA-87 keys from the chain's key

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Trophy } from "lucide-react";
 import { Page } from "@/components/page";
 import { CoverHead } from "@/components/client";
+import { CompeteActions } from "@/components/compete/compete-actions";
 import { Badge, Card, Empty, Hash, ProofStamp } from "@/components/ui";
 import { explorerTx, fmt6, short } from "@/lib/chain";
 import {
@@ -36,6 +37,9 @@ export default async function CompetitionPage({ params }: { params: Promise<{ id
           </>}>
       <CoverHead id={id + 100} title={m?.title ?? `Competition ${id}`} live={p.label === "Open for entries"}
                  meta={[p.label, `${fmt6(c.prize)} fUSD prize`, `${entries.length} entries`, m?.metric ?? ""].filter(Boolean)} />
+
+      <CompeteActions id={id} host={c.host} deadline={c.deadline} revealDeadline={c.revealDeadline} labelsRevealed={c.labelsRevealed}
+                      target={m?.target} open={Date.now() / 1000 <= c.deadline} />
 
       <Card title="Ranking" aside={ev.scores && <ProofStamp tx={ev.scores.tx} />}>
         {!c.scoresPosted ? (
