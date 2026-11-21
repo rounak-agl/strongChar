@@ -37,3 +37,5 @@ jobs:
           node-version: 24
       - run: pnpm install --frozen-lockfile=false
       - run: pnpm typecheck
+      - name: Browser job preparation matches the Python code byte for byte
+        run: pnpm --filter @strongchar/web check:prepare
