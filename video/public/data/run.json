@@ -1,0 +1,429 @@
+{
+ "job": 4,
+ "start": "2026-11-20T19:52:25+00:00",
+ "machines": [
+  {
+   "name": "owner",
+   "role": "owner",
+   "ip": "local",
+   "place": "owner's laptop"
+  },
+  {
+   "name": "coordinator",
+   "role": "coordinator",
+   "ip": "32.237.26.58",
+   "place": "AWS Sydney \u00b7 edge"
+  },
+  {
+   "name": "verifier-a",
+   "role": "verifier",
+   "ip": "16.176.220.17",
+   "place": "AWS Sydney \u00b7 verifiers"
+  },
+  {
+   "name": "verifier-b",
+   "role": "verifier",
+   "ip": "16.176.220.17",
+   "place": "AWS Sydney \u00b7 verifiers"
+  },
+  {
+   "name": "node-1",
+   "role": "node",
+   "ip": "3.107.206.175",
+   "place": "AWS Sydney \u00b7 nodes",
+   "cheat": false
+  },
+  {
+   "name": "node-2",
+   "role": "node",
+   "ip": "3.107.206.175",
+   "place": "AWS Sydney \u00b7 nodes",
+   "cheat": false
+  },
+  {
+   "name": "node-3",
+   "role": "node",
+   "ip": "3.107.206.175",
+   "place": "AWS Sydney \u00b7 nodes",
+   "cheat": false
+  },
+  {
+   "name": "node-4",
+   "role": "node",
+   "ip": "3.107.206.175",
+   "place": "AWS Sydney \u00b7 nodes",
+   "cheat": true
+  }
+ ],
+ "owner": [
+  {
+   "t": 12.35,
+   "text": "priced at 0.008408 fUSD (0.0011 Gop per node per round)"
+  },
+  {
+   "t": 40.06,
+   "text": "sealed 4 shards and the validation split to both verifiers; spec 0xf7d535aad4401a69\u2026"
+  },
+  {
+   "t": 64.43,
+   "text": "job 4 created: 0.008408 fUSD, 15 BERU stake per seat: 0x1ea89ca2ae\u2026"
+  },
+  {
+   "t": 527.56,
+   "text": "round 1: Open, seated ['node-4', 'node-3', 'node-2', 'node-1'], revealed 0, slashed bitmap 0b0000"
+  },
+  {
+   "t": 540.74,
+   "text": "round 1: Settled, seated ['node-4', 'node-3', 'node-2', 'node-1'], revealed 4, slashed bitmap 0b0001"
+  },
+  {
+   "t": 1002.49,
+   "text": "round 2: Open, seated ['node-3', 'node-1', 'node-4', 'node-2'], revealed 0, slashed bitmap 0b0000"
+  },
+  {
+   "t": 1005.93,
+   "text": "round 2: Settled, seated ['node-3', 'node-1', 'node-4', 'node-2'], revealed 4, slashed bitmap 0b0100"
+  },
+  {
+   "t": 1009.11,
+   "text": "holdout accuracy: initial 0.310 -> final 0.774 (model opened locally by the owner only)"
+  },
+  {
+   "t": 1012.29,
+   "text": "node-1: claimable 0.008938 fUSD, stake 200 BERU, verified work 8 s"
+  },
+  {
+   "t": 1015.47,
+   "text": "node-2: claimable 0.011597 fUSD, stake 200 BERU, verified work 9 s"
+  },
+  {
+   "t": 1018.64,
+   "text": "node-3: claimable 0.007069 fUSD, stake 200 BERU, verified work 7 s"
+  },
+  {
+   "t": 1019.7,
+   "text": "node-4: claimable 0.0 fUSD, stake 80 BERU, verified work 0 s"
+  },
+  {
+   "t": 1019.89,
+   "text": "community pool: 0.00836 fUSD"
+  }
+ ],
+ "coordinator": [
+  {
+   "t": 65.18,
+   "text": "job 4 opened round 1: seated ['node-4', 'node-3', 'node-2', 'node-1']"
+  },
+  {
+   "t": 546.21,
+   "text": "job 4 opened round 2: seated ['node-3', 'node-1', 'node-4', 'node-2']"
+  }
+ ],
+ "logs": {
+  "node-1": [
+   {
+    "t": 96.15,
+    "text": "node-1 job 4 round 1 trained shard 3 and committed (0x5a07507d073740a714441feb42408b26)"
+   },
+   {
+    "t": 314.93,
+    "text": "node-1 job 4 round 1 revealed (0x8b899354790088f481fb04218ab411e4)"
+   },
+   {
+    "t": 580.46,
+    "text": "node-1 job 4 round 2 trained shard 1 and committed (0x663c86f3e9fed3d1542bb91f2d32a7f6)"
+   },
+   {
+    "t": 801.65,
+    "text": "node-1 job 4 round 2 revealed (0x4024e9ede566152408813c37899551b2)"
+   }
+  ],
+  "node-2": [
+   {
+    "t": 89.14,
+    "text": "node-2 job 4 round 1 trained shard 2 and committed (0x2fe5df1b9a2bd61997b0618164830734)"
+   },
+   {
+    "t": 318.9,
+    "text": "node-2 job 4 round 1 revealed (0x3d6e7f2155ab67212cbd9c9c3ae87ae8)"
+   },
+   {
+    "t": 583.04,
+    "text": "node-2 job 4 round 2 trained shard 3 and committed (0xc0dd5c963e9ee7538475864997d3cc22)"
+   },
+   {
+    "t": 801.36,
+    "text": "node-2 job 4 round 2 revealed (0xced7c60cf5f4308955c789123c9fd3e4)"
+   }
+  ],
+  "node-3": [
+   {
+    "t": 94.79,
+    "text": "node-3 job 4 round 1 trained shard 1 and committed (0x4af616d48cb7914a5cbff18335dbc192)"
+   },
+   {
+    "t": 313.57,
+    "text": "node-3 job 4 round 1 revealed (0xd7b1e7405bc3c5449d6598a019b73378)"
+   },
+   {
+    "t": 584.53,
+    "text": "node-3 job 4 round 2 trained shard 0 and committed (0x1c5a503e27e9282932f8da624d35a0d2)"
+   },
+   {
+    "t": 799.99,
+    "text": "node-3 job 4 round 2 revealed (0xf5a3f74c7551a15c59d2c86b357f17c3)"
+   }
+  ],
+  "node-4": [
+   {
+    "t": 90.53,
+    "text": "node-4 job 4 round 1 trained shard 0 and committed (0xa7015e3c8eca786f8c02632c0ce0f7de) [cheating]"
+   },
+   {
+    "t": 320.55,
+    "text": "node-4 job 4 round 1 revealed (0xd30ea7882de7412c7f455a9d83542182)"
+   },
+   {
+    "t": 585.94,
+    "text": "node-4 job 4 round 2 trained shard 2 and committed (0x511cd72b35780563afb48ee7de51aa54) [cheating]"
+   },
+   {
+    "t": 795.61,
+    "text": "node-4 job 4 round 2 revealed (0xe5f8b5b5dc85c1e5abffe29243d899d6)"
+   }
+  ],
+  "verifier-a": [
+   {
+    "t": 79.08,
+    "text": "verifier-a job 4 round 1 fed 4 nodes their shards"
+   },
+   {
+    "t": 506.8,
+    "text": "verifier-a job 4 round 1 node node-4: ReplayMismatch"
+   },
+   {
+    "t": 508.77,
+    "text": "verifier-a job 4 round 1 node node-3: Ok"
+   },
+   {
+    "t": 510.71,
+    "text": "verifier-a job 4 round 1 node node-2: Ok"
+   },
+   {
+    "t": 512.72,
+    "text": "verifier-a job 4 round 1 node node-1: Ok"
+   },
+   {
+    "t": 519.62,
+    "text": "verifier-a job 4 round 1 signed settlement outcome=0 slashed=1"
+   },
+   {
+    "t": 529.11,
+    "text": "verifier-a job 4 round 1 finalized on-chain (0x6a27b9c7ee274e93b4dd0c63c38a3560)"
+   },
+   {
+    "t": 571.52,
+    "text": "verifier-a job 4 round 2 fed 4 nodes their shards"
+   },
+   {
+    "t": 990.63,
+    "text": "verifier-a job 4 round 2 node node-3: Ok"
+   },
+   {
+    "t": 992.52,
+    "text": "verifier-a job 4 round 2 node node-1: Ok"
+   },
+   {
+    "t": 994.42,
+    "text": "verifier-a job 4 round 2 node node-4: ReplayMismatch"
+   },
+   {
+    "t": 996.36,
+    "text": "verifier-a job 4 round 2 node node-2: Ok"
+   },
+   {
+    "t": 1002.33,
+    "text": "verifier-a job 4 round 2 signed settlement outcome=0 slashed=4"
+   },
+   {
+    "t": 1007.63,
+    "text": "verifier-a job 4 round 2 finalized on-chain (0x4918e9d28bd1f506d77a35d2190755f0)"
+   }
+  ],
+  "verifier-b": [
+   {
+    "t": 83.14,
+    "text": "verifier-b job 4 round 1 fed 4 nodes their shards"
+   },
+   {
+    "t": 503.15,
+    "text": "verifier-b job 4 round 1 node node-4: ReplayMismatch"
+   },
+   {
+    "t": 505.1,
+    "text": "verifier-b job 4 round 1 node node-3: Ok"
+   },
+   {
+    "t": 507.05,
+    "text": "verifier-b job 4 round 1 node node-2: Ok"
+   },
+   {
+    "t": 509.37,
+    "text": "verifier-b job 4 round 1 node node-1: Ok"
+   },
+   {
+    "t": 516.09,
+    "text": "verifier-b job 4 round 1 signed settlement outcome=0 slashed=1"
+   },
+   {
+    "t": 571.68,
+    "text": "verifier-b job 4 round 2 fed 4 nodes their shards"
+   },
+   {
+    "t": 988.13,
+    "text": "verifier-b job 4 round 2 node node-3: Ok"
+   },
+   {
+    "t": 990.03,
+    "text": "verifier-b job 4 round 2 node node-1: Ok"
+   },
+   {
+    "t": 991.93,
+    "text": "verifier-b job 4 round 2 node node-4: ReplayMismatch"
+   },
+   {
+    "t": 993.82,
+    "text": "verifier-b job 4 round 2 node node-2: Ok"
+   },
+   {
+    "t": 999.75,
+    "text": "verifier-b job 4 round 2 signed settlement outcome=0 slashed=4"
+   }
+  ]
+ },
+ "rounds": [
+  {
+   "round": 1,
+   "opened": 65.18,
+   "committed": {
+    "node-1": 96.15,
+    "node-2": 89.14,
+    "node-3": 94.79,
+    "node-4": 90.53
+   },
+   "revealed": {
+    "node-1": 314.93,
+    "node-2": 318.9,
+    "node-3": 313.57,
+    "node-4": 320.55
+   },
+   "settled": 529.11,
+   "seated": [
+    "node-4",
+    "node-3",
+    "node-2",
+    "node-1"
+   ],
+   "shards": {
+    "node-1": 3,
+    "node-2": 2,
+    "node-3": 1,
+    "node-4": 0
+   },
+   "tx": "0x6a27b9c7615376bc50f2d594be22d43e68c5cb58ee274e93b4dd0c63c38a3560",
+   "slashed": [
+    "node-4"
+   ],
+   "hashes": {
+    "node-4": {
+     "claimed": "0xa7015e3c018fde31a5f009f410ca5d936544e4ef8eca786f8c02632c0ce0f7de",
+     "ok": false
+    },
+    "node-3": {
+     "claimed": "0x4af616d44964af1f4c0e7138c67de3c8295083ae8cb7914a5cbff18335dbc192",
+     "ok": true
+    },
+    "node-2": {
+     "claimed": "0x2fe5df1b9611c5d57abc08cf73f8ca5da5e735d49a2bd61997b0618164830734",
+     "ok": true
+    },
+    "node-1": {
+     "claimed": "0x5a07507d969e1d558b62f9117d38f26103148457073740a714441feb42408b26",
+     "ok": true
+    }
+   }
+  },
+  {
+   "round": 2,
+   "opened": 546.21,
+   "committed": {
+    "node-1": 580.46,
+    "node-2": 583.04,
+    "node-3": 584.53,
+    "node-4": 585.94
+   },
+   "revealed": {
+    "node-1": 801.65,
+    "node-2": 801.36,
+    "node-3": 799.99,
+    "node-4": 795.61
+   },
+   "settled": 1007.63,
+   "seated": [
+    "node-3",
+    "node-1",
+    "node-4",
+    "node-2"
+   ],
+   "shards": {
+    "node-1": 1,
+    "node-2": 3,
+    "node-3": 0,
+    "node-4": 2
+   },
+   "tx": "0x4918e9d25d902f48c87d5ef151672e1a4fb46c3f8bd1f506d77a35d2190755f0",
+   "slashed": [
+    "node-4"
+   ],
+   "hashes": {
+    "node-3": {
+     "claimed": "0x1c5a503e68106fd4fe94147cf81c77821d7b815327e9282932f8da624d35a0d2",
+     "ok": true
+    },
+    "node-1": {
+     "claimed": "0x663c86f386c2166223bf95b8f5f1c7044660da22e9fed3d1542bb91f2d32a7f6",
+     "ok": true
+    },
+    "node-4": {
+     "claimed": "0x511cd72b6ad3b88be69d36c02f297d3c6659183d35780563afb48ee7de51aa54",
+     "ok": false
+    },
+    "node-2": {
+     "claimed": "0xc0dd5c96b89c6535ab821c48349b91f6245d21763e9ee7538475864997d3cc22",
+     "ok": true
+    }
+   }
+  }
+ ],
+ "createTx": "0x1ea89ca2aee61069c6996c72dc17aa85a8ac90a8d4062e1a5ba4f638603181bc",
+ "budget": 0.008408,
+ "stake": 15,
+ "payouts": {
+  "node-1": 0.008938,
+  "node-2": 0.011597,
+  "node-3": 0.007069,
+  "node-4": 0.0
+ },
+ "pool": 0.00836,
+ "holdout": {
+  "before": 0.31,
+  "after": 0.774
+ },
+ "cheater": {
+  "name": "node-4",
+  "stakeBefore": 200,
+  "stakeAfter": 80
+ },
+ "x86Hash": "0x3efbb2033f66d1999ee1a8eeffda0967694476a62ef4474d610f442468faf38a",
+ "armHash": "0x3efbb2033f66d1999ee1a8eeffda0967694476a62ef4474d610f442468faf38a"
+}
