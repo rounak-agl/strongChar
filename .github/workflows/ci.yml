@@ -39,3 +39,5 @@ jobs:
       - run: pnpm typecheck
       - name: Browser job preparation matches the Python code byte for byte
         run: pnpm --filter @strongchar/web check:prepare
+      - name: The QoreX funding path against the QoreX test double
+        run: pnpm --filter @strongchar/web check:qorex
