@@ -86,6 +86,9 @@ app links each one to the explorer. Run results that lead to a verdict are kept 
 
 - **Two colluding verifiers** can sign any result and read every sealed input. Raising the threshold (k of n
   verifiers) is the natural next step.
+- **In this demo both verifiers share one server.** That makes them one point of compromise: whoever holds that server
+  holds both signing keys and both decryption keys. Independence is assumed by the protocol, not provided by this
+  hosting; a real deployment runs each verifier with a separate operator.
 - **Nodes see plaintext shards.** Hiding data from the machine that trains on it needs secure enclaves or FHE, which
   are out of scope.
 - **Run time is a narrow side channel.** A script can vary its run time. Whole-second rounding, the timeout and the

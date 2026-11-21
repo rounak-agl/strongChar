@@ -53,7 +53,9 @@ Live check after deploy: two real ML-DSA-87 signatures from the registered verif
 
 ## Live on AWS (20 Nov 2026)
 
-The coordinator runs at `https://32-237-26-58.sslip.io` (Caddy with TLS, no OpenAPI schema, HSTS). The two verifiers and four nodes run on separate servers with no inbound ports, and competition entries run under gVisor. All three servers are arm64.
+The coordinator runs at `https://32-237-26-58.sslip.io` (Caddy with TLS, no OpenAPI schema, HSTS). The coordinator, the two verifiers and the four nodes are spread over three servers with no inbound ports, and competition entries run under gVisor. All three servers are arm64.
+
+**What this demo trusts that production wouldn't:** both verifiers run on the same server, and all four nodes share another. The protocol assumes the two verifiers are independent, since each must sign every verdict. Whoever controls the verifiers server controls both signatures, and can read everything sealed to the verifiers. A real deployment puts each verifier with a separate operator, on separate hardware and keys. The contract doesn't need to change for that: it already takes the verifier pair as two independent keys fixed at deploy.
 
 - Job 3 trained on the live stack: holdout accuracy 0.310 → 0.777. node-4 cheated and was slashed in both rounds. The other three nodes, past probation, were paid directly plus the community-pool top-up. Created in [`0xc8dfeaf4…`](https://explore.qore.network/tx/0xc8dfeaf418b4c170562a4ca9c43b4b20ea599356944b9499787a7ed08706f731).
 - Competition 2 ran every entry in the gVisor sandbox. Logistic regression scored 0.832 and won, always-0 scored 0.815, and the script that tries the network was rejected as a crash. Created in [`0x9e30de7f…`](https://explore.qore.network/tx/0x9e30de7fcea9e6724650a64537c3535905afb07b0e7eb5e81f88a08d2c593bf5).
