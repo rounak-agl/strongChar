@@ -86,7 +86,9 @@ export async function submit(account: UnifiedAccount, messages: EncodeObject[], 
     const p = {
       account: account as any, chainId: CHAIN_ID, accountNumber: nums.number, sequence: nums.sequence,
       messages: messages as any, fee: calculateFee(gas, GAS_PRICE),
-      encodeMessage: (m: any) => registry.encodeAsAny(m), signBytesVersion,
+      // Messages the SDK has no composer for (MsgConvertCoin) arrive already encoded.
+      encodeMessage: (m: any) => (m.value instanceof Uint8Array ? { typeUrl: m.typeUrl, value: m.value } : registry.encodeAsAny(m)),
+      signBytesVersion,
     };
     return (hybrid ? signHybridEth(p) : signClassicalEth(p)).txRawBytes;
   };

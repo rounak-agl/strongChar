@@ -51,6 +51,14 @@ export class Coordinator {
     return (await ok<{ id: string }>(r)).id;
   }
 
+  /** Stores the spec and the manifest of sealed blobs; the coordinator recomputes and returns the spec hash. */
+  async putDraft(spec: Record<string, unknown>, manifest: Record<string, unknown>): Promise<string> {
+    const r = await fetch(`${API}/v1/jobs/draft`, {
+      method: "POST", headers: { ...(await this.auth()), "content-type": "application/json" }, body: JSON.stringify({ spec, manifest }),
+    });
+    return (await ok<{ specHash: string }>(r)).specHash;
+  }
+
   async getBlob(id: string): Promise<string> {
     return (await ok<{ envelope: string }>(await fetch(`${API}/v1/blobs/${id}`, { headers: await this.auth() }))).envelope;
   }

@@ -13,6 +13,7 @@ const GET_ALLOWED = [
   /^qorechain\/[a-z0-9_]+\/v1\/(params|protocol_features|features)$/,
   /^cosmos\/upgrade\/v1beta1\/(applied_plan\/[a-z0-9._-]+|current_plan)$/,
   /^cosmos\/base\/tendermint\/v1beta1\/blocks\/latest$/,
+  /^qorechain\/amm\/v1\/pools$/,
 ];
 const POST_ALLOWED = new Set(["cosmos/tx/v1beta1/simulate", "cosmos/tx/v1beta1/txs"]);
 const MAX_BODY = 256 * 1024;
