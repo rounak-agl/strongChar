@@ -1,0 +1,46 @@
+{
+  "s01-open": {
+    "seconds": 10.840816,
+    "hash": "4f6b1a77ed9fc873"
+  },
+  "s02-title": {
+    "seconds": 7.627755,
+    "hash": "f25dd906ed5eda4f"
+  },
+  "s03-owner": {
+    "seconds": 17.240816,
+    "hash": "c46df1d029d86819"
+  },
+  "s04-network": {
+    "seconds": 13.87102,
+    "hash": "742c51b6f545a6de"
+  },
+  "s05-training": {
+    "seconds": 16.117551,
+    "hash": "ba96d3b8f45da406"
+  },
+  "s06-replay": {
+    "seconds": 14.027755,
+    "hash": "ed9e11a3b89b7921"
+  },
+  "s07-proof": {
+    "seconds": 13.87102,
+    "hash": "432dddb8d7c42ff5"
+  },
+  "s08-pay": {
+    "seconds": 8.045714,
+    "hash": "7c802bfdf3eabfbe"
+  },
+  "s09-more": {
+    "seconds": 14.837551,
+    "hash": "002391d3a7d6412b"
+  },
+  "s10-close": {
+    "seconds": 7.157551,
+    "hash": "4b739927d07de12d"
+  },
+  "s00-hook": {
+    "seconds": 7.88898,
+    "hash": "315225ff6dd02d3a"
+  }
+}
