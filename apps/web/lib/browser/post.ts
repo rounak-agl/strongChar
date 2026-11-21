@@ -1,8 +1,10 @@
 // Post a job from the browser, the same steps as strongchar_runtime.owner.post: seal every shard and the validation
 // split to the two verifiers, store the draft, get fUSD, open a scoped EVM window, approve and createJob.
-import { closeEvmWindowMsg, fetchEvmWindow, msg, openEvmWindowMsg } from "@qorechain/sdk";
+import { evmWindowCost, evmWindowStatus } from "@qorechain/evm";
+import { diana } from "@/lib/evm-chain";
+import { closeEvmWindowMsg, msg, openEvmWindowMsg } from "@qorechain/sdk";
 import {
-  createPublicClient, createWalletClient, defineChain, encodeFunctionData, erc20Abi, http, keccak256, concat as concatHex, type Hex,
+  createPublicClient, createWalletClient, encodeFunctionData, erc20Abi, http, keccak256, concat as concatHex, type Hex,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { deployment, jobMarketAbi } from "@/lib/deployment";
@@ -16,12 +18,9 @@ const FUSD = deployment.fusd as Hex;
 const FUSD_DENOM = `erc20:${deployment.fusd}`;
 const POOL_FUSD_QOR = "2";
 const WINDOWS = { commit: 240, reveal: 180, finalize: 1200 } as const;
-const UQOR_PER_GAS = 0.2; // a window reserves gas limit x max fee; max fee is twice diana's 200 gwei base fee
-const diana = defineChain({
-  id: 9800, name: "QoreChain diana", nativeCurrency: { name: "QOR", symbol: "QOR", decimals: 18 },
-  rpcUrls: { default: { http: ["https://evm-testnet.qore.host"] } },
-});
 const evm = createPublicClient({ chain: diana, transport: http() });
+/** Twice the current base fee: read once per job, then both the window size and every transaction use it. */
+const maxFee = async () => (await evm.getBlock()).baseFeePerGas! * 2n;
 
 export type Progress = (step: string, detail?: string) => void;
 
@@ -58,10 +57,10 @@ export async function ensureFusd(o: Owner, need: bigint, log: Progress): Promise
 }
 
 /** Opens a window scoped to fUSD and the JobMarket, sized for `txs` transactions of `gas` each. */
-async function ensureWindow(o: Owner, txs: number, gas: bigint, log: Progress): Promise<void> {
+async function ensureWindow(o: Owner, txs: number, gas: bigint, fee: bigint, log: Progress): Promise<void> {
   const a = o.account;
-  const need = BigInt(Math.ceil(txs * Number(gas) * UQOR_PER_GAS));
-  const w = await fetchEvmWindow({ rest: `${location.origin}${REST}`, address: a.cosmos });
+  const need = BigInt(txs) * evmWindowCost({ gas, maxFeePerGas: fee });
+  const w = await evmWindowStatus({ rest: `${location.origin}${REST}`, address: a.cosmos });
   const targets = [FUSD, MARKET].map((t) => t.toLowerCase());
   const have = new Set((w.allowedTargets ?? []).map((t) => t.toLowerCase()));
   if (w.live && targets.every((t) => have.has(t)) && w.remainingTxs >= BigInt(txs) && w.remainingValue >= need && w.remainingBlocks >= 120n) return;
@@ -75,12 +74,11 @@ async function estimate(o: Owner, to: Hex, data: Hex): Promise<bigint> {
   return gas * 125n / 100n + 20_000n;
 }
 
-async function sendEvm(o: Owner, to: Hex, data: Hex, gas: bigint): Promise<Hex> {
+async function sendEvm(o: Owner, to: Hex, data: Hex, gas: bigint, fee: bigint): Promise<Hex> {
   const account = privateKeyToAccount(o.account.privateKey as Hex);
   const wallet = createWalletClient({ account, chain: diana, transport: http() });
-  const block = await evm.getBlock();
   const nonce = await evm.getTransactionCount({ address: account.address, blockTag: "pending" }); // read after the window opened
-  const hash = await wallet.sendTransaction({ to, data, gas, nonce, maxFeePerGas: block.baseFeePerGas! * 2n, maxPriorityFeePerGas: 0n });
+  const hash = await wallet.sendTransaction({ to, data, gas, nonce, maxFeePerGas: fee, maxPriorityFeePerGas: 0n });
   const r = await evm.waitForTransactionReceipt({ hash, timeout: 90_000 });
   if (r.status !== "success") throw new Error(`transaction reverted: ${hash}`);
   return hash;
@@ -123,11 +121,12 @@ export async function postJob(o: Owner, p: Plan, log: Progress): Promise<Posted>
   // Estimate first so a revert surfaces with its reason and costs nothing. createJob pulls the budget, so it can only
   // be estimated after approve; the window is sized for a generous createJob until then.
   const gasA = await estimate(o, FUSD, approve);
-  await ensureWindow(o, 2, 1_500_000n, log);
+  const fee = await maxFee();
+  await ensureWindow(o, 2, 1_500_000n, fee, log);
   log("Approving the budget", `${(Number(p.budget) / 1e6).toFixed(6)} fUSD`);
-  await sendEvm(o, FUSD, approve, gasA);
+  await sendEvm(o, FUSD, approve, gasA, fee);
   log("Creating the job on chain");
-  const createTx = await sendEvm(o, MARKET, create, await estimate(o, MARKET, create));
+  const createTx = await sendEvm(o, MARKET, create, await estimate(o, MARKET, create), fee);
   await submit(a, [closeEvmWindowMsg(a.cosmos) as any]);
   const count = Number(await evm.readContract({ address: MARKET, abi: jobMarketAbi, functionName: "jobCount" }));
   if (count !== jobId) throw new Error(`another job took id ${jobId} at the same moment; post again`);

@@ -3,6 +3,7 @@
 // register its keys, then seal and open data entirely in this tab.
 import { useEffect, useState, type ReactNode } from "react";
 import { Check, Download, KeyRound, Lock, LockOpen, ShieldCheck, Wallet } from "lucide-react";
+import { PqcStatusBadge, QoreChainProvider, useBalance, type QoreChainProviderConfig } from "@qorechain/react";
 import { Banner, Button, Card, SectionTitle, TileBusy } from "@/components/primitives";
 import { fromPhrase, newPhrase, publishCard, registerKem, registerPqc, status, type Owner, type Setup } from "@/lib/browser/account";
 import { explorerTx } from "@/lib/browser/links";
@@ -130,13 +131,25 @@ function Unlock({ stored }: { stored: Sealed }) {
 
 type Step = "fund" | "pqc" | "kem" | "card";
 
-function Unlocked({ owner, onForget }: { owner: Owner; onForget: () => void }) {
+// The QoreChain React kit reads the chain for the live parts of this panel, through the same-origin relay
+// (the chain's REST API sends no CORS headers).
+const QORE: QoreChainProviderConfig = { network: "testnet", endpoints: { rest: "/api/chain" } };
+
+function Unlocked(props: { owner: Owner; onForget: () => void }) {
+  return <QoreChainProvider config={QORE}><UnlockedBody {...props} /></QoreChainProvider>;
+}
+
+function UnlockedBody({ owner, onForget }: { owner: Owner; onForget: () => void }) {
   const [s, setS] = useState<Setup | null>(null);
   const [busy, setBusy] = useState<Step | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [txs, setTxs] = useState<Partial<Record<Step, string>>>({});
   const refresh = () => status(owner).then(setS).catch((e) => setErr((e as Error).message));
   useEffect(() => { refresh(); }, [owner]);
+  // Poll the balance, so QOR sent from QoreX, the faucet or any wallet ticks the first step without a reload.
+  const live = useBalance(owner.account.cosmos, { denom: "uqor", refreshInterval: 8_000 });
+  const uqor = live.data ? BigInt(live.data.amount) : s?.uqor;
+  useEffect(() => { if (s && !s.funded && uqor && uqor > 0n) refresh(); }, [uqor]);
 
   const run = async (step: Step, f: () => Promise<string | void>) => {
     setBusy(step); setErr(null);
@@ -149,7 +162,11 @@ function Unlocked({ owner, onForget }: { owner: Owner; onForget: () => void }) {
     <div className="flex max-w-flow flex-col gap-4">
       <Card className="flex flex-col gap-4 p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <SectionTitle title="This browser's account" sub="one key, two addresses: the native lane and the EVM lane" />
+          <div className="flex flex-col gap-2">
+            <SectionTitle title="This browser's account" sub="one key, two addresses: the native lane and the EVM lane" />
+            <PqcStatusBadge key={s?.pqc} address={a.cosmos} safeLabel="ML-DSA-87 key on chain" unsafeLabel="No ML-DSA-87 key on chain yet"
+              className="w-fit font-mono text-xs data-[pqc-status=true]:text-chain text-muted" />
+          </div>
           <div className="flex gap-2">
             <Button icon={Lock} onClick={() => setOwner(null)}>Lock</Button>
             <Button variant="ghost" onClick={() => { if (confirm("Remove the encrypted phrase from this browser? Make sure you have the backup.")) onForget(); }}>Forget</Button>
@@ -158,7 +175,7 @@ function Unlocked({ owner, onForget }: { owner: Owner; onForget: () => void }) {
         <dl className="grid gap-1 font-mono text-sm">
           <div className="flex gap-3"><dt className="w-16 text-muted">native</dt><dd className="break-all text-ink">{a.cosmos}</dd></div>
           <div className="flex gap-3"><dt className="w-16 text-muted">EVM</dt><dd className="break-all text-ink">{a.evm}</dd></div>
-          <div className="flex gap-3"><dt className="w-16 text-muted">QOR</dt><dd className="text-ink">{s ? (Number(s.uqor) / 1e6).toFixed(4) : "…"}</dd></div>
+          <div className="flex gap-3"><dt className="w-16 text-muted">QOR</dt><dd className="text-ink">{uqor !== undefined ? (Number(uqor) / 1e6).toFixed(4) : "…"}</dd></div>
         </dl>
       </Card>
 
@@ -194,7 +211,7 @@ function Row({ done, title, sub, action, tx, note }: { done: boolean; title: str
       <div className="min-w-0 flex-1">
         <p className="text-sm text-ink">{title}</p>
         <p className="text-sm text-muted">{sub}</p>
-        {note && <p className="mt-1 text-sm text-warn">{note}</p>}
+        {note && !done && <p className="mt-1 text-sm text-warn">{note}</p>}
         {tx && <a className="mt-1 block font-mono text-xs text-muted underline" href={explorerTx(tx)} target="_blank" rel="noreferrer">{tx.slice(0, 12)}…</a>}
       </div>
       {!done && action}

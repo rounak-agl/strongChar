@@ -7,7 +7,7 @@ const HEADERS = { "user-agent": "strongchar-web/0.1", accept: "application/json"
 
 const GET_ALLOWED = [
   /^cosmos\/auth\/v1beta1\/accounts\/qor1[0-9a-z]{38}$/,
-  /^cosmos\/bank\/v1beta1\/balances\/qor1[0-9a-z]{38}$/,
+  /^cosmos\/bank\/v1beta1\/balances\/qor1[0-9a-z]{38}(\/by_denom)?$/,
   /^cosmos\/tx\/v1beta1\/txs\/[0-9A-Fa-f]{64}$/,
   /^qorechain\/pqc\/v1\/(account|kem|evm_window)\/qor1[0-9a-z]{38}$/,
   /^qorechain\/[a-z0-9_]+\/v1\/(params|protocol_features|features)$/,

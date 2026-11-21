@@ -109,6 +109,11 @@ QoreSeal keys or sign arbitrary messages yet, so it only funds that account. The
 command-line tools. Job preparation in the browser is byte for byte the Python planner: CI recomputes
 `vectors/web/prepare.json` with the browser code on every push. The first job posted this way is job 5 on diana.
 
+Anyone can re-check a job's settlements without trusting strongChar's servers: **Check the signatures yourself** on a
+job's page rebuilds the bytes both verifiers signed for each round, fetches their ML-DSA-87 keys from the chain's key
+registry and asks the `pqcVerify` precompile from the browser, then flips one byte and asks again (it must be rejected).
+The QoreX funding path is tested in CI against the QoreX test double (`apps/web/scripts/qorex-check.ts`).
+
 Every recipient is a QoreChain address. Before anything is sealed to it, its recipient card (ML-KEM-1024 and X25519 public keys, signed with both its secp256k1 and ML-DSA-87 keys) is checked against the ML-DSA-87 and ML-KEM-1024 keys that address registered on chain (`packages/qore/src/strongchar_qore/seal.py`).
 
 ## Security
@@ -120,7 +125,7 @@ What is protected, from whom, and where it stops: [THREAT_MODEL.md](THREAT_MODEL
 Built with these open-source projects and QoreChain kits:
 
 - QoreChain Python SDKs: [`qorechain-sdk`](https://pypi.org/project/qorechain-sdk/), [`qorechain-qoreseal`](https://pypi.org/project/qorechain-qoreseal/), [`qorechain-qoresign`](https://pypi.org/project/qorechain-qoresign/), [`qorechain-pqc`](https://pypi.org/project/qorechain-pqc/)
-- QoreChain TypeScript kits in the web app: [`@qorechain/sdk`](https://www.npmjs.com/package/@qorechain/sdk), [`@qorechain/qoreseal`](https://www.npmjs.com/package/@qorechain/qoreseal), [`@qorechain/qoresign`](https://www.npmjs.com/package/@qorechain/qoresign), [`@qorechain/pqc`](https://www.npmjs.com/package/@qorechain/pqc), [`@qorechain/qorex-types`](https://www.npmjs.com/package/@qorechain/qorex-types)
+- QoreChain TypeScript kits in the web app: [`@qorechain/sdk`](https://www.npmjs.com/package/@qorechain/sdk), [`@qorechain/qoreseal`](https://www.npmjs.com/package/@qorechain/qoreseal), [`@qorechain/qoresign`](https://www.npmjs.com/package/@qorechain/qoresign), [`@qorechain/pqc`](https://www.npmjs.com/package/@qorechain/pqc), [`@qorechain/qorex-types`](https://www.npmjs.com/package/@qorechain/qorex-types), [`@qorechain/evm`](https://www.npmjs.com/package/@qorechain/evm) (diana's EVM chain, window sizing, the `pqcVerify` and `pqcKeyStatus` precompile bindings), [`@qorechain/react`](https://www.npmjs.com/package/@qorechain/react) (live balance and PQC key badge on the account page), [`@qorechain/qorex-wallet-mock`](https://www.npmjs.com/package/@qorechain/qorex-wallet-mock) (QoreX test double in CI)
 - [web3.py](https://github.com/ethereum/web3.py), [liboqs](https://github.com/open-quantum-safe/liboqs) (via `liboqs-python`)
 - [Foundry](https://github.com/foundry-rs/foundry) and [forge-std](https://github.com/foundry-rs/forge-std), [OpenZeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts)
 - [NumPy](https://numpy.org), [eth-abi](https://github.com/ethereum/eth-abi), [FastAPI](https://fastapi.tiangolo.com), [Uvicorn](https://www.uvicorn.org), [HTTPX](https://www.python-httpx.org), [Hatchling](https://hatch.pypa.io)
