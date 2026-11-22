@@ -14,6 +14,17 @@ Train models on private data using other people's computers, and run Kaggle-styl
 
 Built for **Build Before Q-Day: The QoreChain Developer Fest** (category: Encrypted Apps), on testnet `qorechain-diana`.
 
+### Encrypted Apps requirements, and where to see each one
+
+| Requirement | How strongChar meets it | See it live |
+|---|---|---|
+| ML-KEM-1024 encryption | Every shard, validation split, model, competition test set and script is a QoreSeal envelope (ML-KEM-1024 with X25519), sealed to named QoreChain addresses only | [What the server sees](https://strongchar.vercel.app/sealed): the coordinator's whole store, ciphertext only |
+| Registered recipient keys | Nothing is sealed to an address unless it has registered an ML-KEM-1024 key on chain (`MsgRegisterKEMKey`); the browser and the CLI both refuse otherwise | [Your account](https://strongchar.vercel.app/account) registers yours in three steps |
+| ML-DSA key binding | Each recipient card (ML-KEM-1024 and X25519 keys) is signed with the address's secp256k1 and ML-DSA-87 keys and checked against its registered, possession-proven ML-DSA-87 key before sealing. The verifiers' ML-DSA-87 signatures on every settlement are checked on chain by `pqcVerify` | [Job 5](https://strongchar.vercel.app/jobs/5): **Check the signatures yourself** re-verifies them from your browser |
+| Client-side encryption and decryption | The owner seals in the browser and opens the trained model there; nodes and verifiers seal and open on their own machines. The server in the middle never encrypts or decrypts | [Post a job](https://strongchar.vercel.app/jobs/new) and [host a competition](https://strongchar.vercel.app/compete/new) seal before anything is uploaded |
+
+Details per step: [Where encryption happens](#where-encryption-happens).
+
 **Live:** web app at [strongchar.vercel.app](https://strongchar.vercel.app), coordinator at `https://32-237-26-58.sslip.io`, all on testnet `qorechain-diana`. The plan lives in [`docs/plan/`](docs/plan/).
 
 ## Deployed on qorechain-diana (EVM chain 9800)
